@@ -1,0 +1,11 @@
+
+.vscode/
+Dataset.rar
+datasets/
+datasets.*
+log.log
+.ipynb*
+__pycache*
+
+
+
