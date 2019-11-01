@@ -14,24 +14,24 @@ def getDataFile(imgRoot=None, gtRoot=None, targetRoot='./', name='data.csv'):
     for scene in range(1, 8):
         for clip in range(54):
             for view in range(6):
-                data.loc[idx] = 'Szada_Scene{}_img1_Clip{}_View{}.png'.format(
-                    scene, clip, view),\
-                    'Szada_Scene{}_img2_Clip{}_View{}.png'.format(
-                    scene, clip, view),\
-                    'Szada_Scene{}_gt_Clip{}_View{}.png'.format(
-                    scene, clip, view)
+                data.loc[idx] = '{}Szada_Scene{}_img1_Clip{}_View{}.png'.format(
+                    imgRoot,scene, clip, view),\
+                    '{}Szada_Scene{}_img2_Clip{}_View{}.png'.format(
+                    imgRoot,scene, clip, view),\
+                    '{}Szada_Scene{}_gt_Clip{}_View{}.png'.format(
+                    gtRoot,scene, clip, view)
                 log.debug(data.loc[idx])
                 idx += 1
     # Tiszadob
     for scene in range(1, 6):
         for clip in range(54):
             for view in range(6):
-                data.loc[idx] = 'Tiszadob_Scene{}_img1_Clip{}_View{}.png'.format(
-                    scene, clip, view),\
-                    'Tiszadob_Scene{}_img2_Clip{}_View{}.png'.format(
-                    scene, clip, view),\
-                    'Tiszadob_Scene{}_gt_Clip{}_View{}.png'.format(
-                    scene, clip, view)
+                data.loc[idx] = '{}Tiszadob_Scene{}_img1_Clip{}_View{}.png'.format(
+                    imgRoot,scene, clip, view),\
+                    '{}Tiszadob_Scene{}_img2_Clip{}_View{}.png'.format(
+                    imgRoot,scene, clip, view),\
+                    '{}Tiszadob_Scene{}_gt_Clip{}_View{}.png'.format(
+                    gtRoot,scene, clip, view)
                 log.debug(data.loc[idx])
                 idx += 1
     data.to_csv(targetRoot+name, index=False)
@@ -51,6 +51,13 @@ def split(data=None, frac=0.5, root='./'):
     log.info('分割结束，在目录'+root+'生成了train.cav和test.csv')
     return train, test
 
+def log(filename):
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        filename=filename)
+    log = logging.getLogger(__name__)
+    return log
 
 if __name__ == "__main__":
     logging.basicConfig(
@@ -59,6 +66,6 @@ if __name__ == "__main__":
         filename='./log.log')
     log = logging.getLogger(__name__)
     log.info('开始执行')
-    data = getDataFile('datasets/test/', 'datasets/testGT', name='data.csv')
+    data = getDataFile('datasets/train/', 'datasets/trainGT/', name='data.csv')
     train, test = split(data, frac=0.6)
     log.info('结束执行')

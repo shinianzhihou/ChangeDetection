@@ -24,14 +24,14 @@ class myData(Dataset):
         transform = self.transform
         img1 = plt.imread(self.data.loc[index,'img1'])
         img2 = plt.imread(self.data.loc[index,'img2'])
-        gt = plt.imread(self.data.loc[index,'GT'])
+        gt = plt.imread(self.data.loc[index,'GT']) # batch_size*1*112*112
 
         if transform:
             img1 = transform(img1)
             img2 = transform(img2)
             gt = transform(gt)
 
-        return (img1,img2),gt
+        return img1,img2,gt
     
     def __len__(self):
 
