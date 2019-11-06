@@ -12,14 +12,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import os
+import logging
 
 from configs import Config
-from models import SiameseNet
+from models import SiameseNet,loss,_BCELoss
 from data_loader import myData
 from utils import log
 
 # log
-log = log('./log.log')
+log = log('./log.log',level=logging.INFO)
 
 # configuration
 cf = Config()
@@ -66,7 +67,9 @@ if cf.use_gpu:
 # net.train()
 
 # optimizer and criterion
+# criterion = loss()
 criterion = nn.BCELoss()
+
 optimizer = optim.SGD(net.parameters(), lr=leaning_rate,
                       momentum=momentum, weight_decay=weight_decay)
 
@@ -74,7 +77,9 @@ writer = SummaryWriter('./tensorboard/')
 data = next(iter(trainLoader))
 img1, img2, gt = data[0].to(device), data[1].to(device), data[2].to(device)
 writer.add_graph(net,(img1,img2)) # 网络结构
-scale_x = 0 # 折线图横坐标
+iter = 0 # 折线图横坐标
+
+idx_loss = '_1'
 
 # train
 log.info('开始训练')
@@ -86,23 +91,36 @@ for epoch in range(1,num_epochs+1):
         optimizer.zero_grad()
         output = net(img1, img2)
         loss = criterion(output, gt.reshape((-1, gt.shape[2], gt.shape[3])))
+        log.debug("output.shape:{},gt.shape:{}".format(output.shape,gt.shape))
         loss.backward()
         optimizer.step()
 
-        writer.add_scalar('trian/loss',loss.item(),scale_x) # 绘制折线图
-        scale_x += 1
+        writer.add_scalar('train/weighed/loss'+idx_loss,loss.item(),iter) # 绘制折线图
+        iter += 1
 
         running_loss += loss.item()
-        if batch % show_every == 0:
+        if iter % show_every == 0:
             print('[%d, %5d] loss: %.5f' %
                   (epoch, batch , running_loss / show_every))
             log.info('损失：'+'[%d, %5d] loss: %.5f' %
                      (epoch, batch, running_loss / show_every))
             running_loss = 0.0
-        if batch % save_every == 0:
-            model_name = '{}Siamese-BCELoss-epoch-{}-batch-{}.pt'.format(
+        if iter % save_every == 0:
+            model_name = '{}Siamese-weighed-epoch-{}-batch-{}.pt'.format(
                 save_path, epoch, batch)
             log.info('保存模型：'+model_name)
             torch.save(net.state_dict(), model_name)
+
+        if iter % test_every == 0:
+            error = 0.0
+            for _,data in enumerate(testLoader,1):
+                img1, img2, gt = data[0].to(device), data[1].to(
+            device), data[2].to(device)
+                output = net.forward(img1,img2)
+                loss = criterion(output, gt.reshape((-1, gt.shape[2], gt.shape[3])))
+                error += loss.item()
+            
+            writer.add_scalar('test/weighed/loss+idx_loss',error,iter) # 绘制折线图
+
 log.info('训练结束')
 writer.close()

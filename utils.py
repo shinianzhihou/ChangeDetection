@@ -51,9 +51,9 @@ def split(data=None, frac=0.5, root='./'):
     log.info('分割结束，在目录'+root+'生成了train.cav和test.csv')
     return train, test
 
-def log(filename):
+def log(filename='./log.log',level=logging.INFO):
     logging.basicConfig(
-        level=logging.INFO,
+        level=level,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         filename=filename)
     log = logging.getLogger(__name__)

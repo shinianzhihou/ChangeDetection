@@ -8,13 +8,13 @@ class Config:
     weight_decay = 5e-4
 
     num_epochs = 1000
-    batch_size = 8
+    batch_size = 4
     use_gpu = True
 
     num_workers = 0
     show_every = 100
-    save_every = 100
-    test_every = 100
+    save_every = 100000
+    test_every = 10000
 
     save_path = './models/'
 

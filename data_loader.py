@@ -25,14 +25,21 @@ class myData(Dataset):
         img1 = plt.imread(self.data.loc[index,'img1'])
         img2 = plt.imread(self.data.loc[index,'img2'])
         gt = plt.imread(self.data.loc[index,'GT']) # batch_size*1*112*112
+        gt_name = self.data.loc[index,'GT']
+        # gt = gt.reshape((112,112,1))
 
         if transform:
             img1 = transform(img1)
             img2 = transform(img2)
             gt = transform(gt)
 
-        return img1,img2,gt
+        return img1,img2,gt,gt_name
     
     def __len__(self):
 
         return len(self.data)
+
+# if __name__=="__main":
+#     mydata = myData()
+#     img1,img2,gt = mydata.__getitem__(2)
+#     print(gt.shape)
