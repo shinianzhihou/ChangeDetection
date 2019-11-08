@@ -25,6 +25,7 @@ class loss(nn.Module):
 
 
 class SiameseNet(nn.Module):
+    # 卷积过程中feature map大小不变的卷积网络
     def __init__(self):
         super(SiameseNet, self).__init__()
         self.featureExtract = nn.Sequential(
@@ -32,7 +33,7 @@ class SiameseNet(nn.Module):
             nn.Conv2d(64, 64, 3, padding=1),
             nn.Conv2d(64, 64, 5, padding=2),
             nn.Conv2d(64, 32, 5, padding=2),
-            nn.Conv2d(32, 16, 1, padding=0),
+            nn.Conv2d(.32, 16, 1, padding=0),
         )
         self.distance = nn.PairwiseDistance(p=2)
 
@@ -42,6 +43,7 @@ class SiameseNet(nn.Module):
         x = self.distance(x1, x2)
 
         return x
+
 
 
 if __name__ == "__main__":
