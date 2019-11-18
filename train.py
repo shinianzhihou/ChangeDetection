@@ -15,7 +15,7 @@ import os
 import logging
 
 from configs import Config
-from models import SiameseNet,loss,_BCELoss
+from models import *
 from data_loader import myData
 from utils import log
 
@@ -57,7 +57,7 @@ testLoader = DataLoader(dataset=testSet,
 log.info('数据集准备完成')
 
 # net
-net = SiameseNet()
+net = SiameseUnet(3,1)
 # gpu
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 if cf.use_gpu:
@@ -68,7 +68,7 @@ if cf.use_gpu:
 
 # optimizer and criterion
 # criterion = loss()
-criterion = nn.BCELoss()
+criterion = nn.BCEWithLogitsLoss()
 
 optimizer = optim.SGD(net.parameters(), lr=leaning_rate,
                       momentum=momentum, weight_decay=weight_decay)
@@ -79,7 +79,7 @@ img1, img2, gt = data[0].to(device), data[1].to(device), data[2].to(device)
 writer.add_graph(net,(img1,img2)) # 网络结构
 iter = 0 # 折线图横坐标
 
-idx_loss = '_1'
+idx_loss = '_3'
 
 # train
 log.info('开始训练')
@@ -90,7 +90,10 @@ for epoch in range(1,num_epochs+1):
             device), data[2].to(device)
         optimizer.zero_grad()
         output = net(img1, img2)
-        loss = criterion(output, gt.reshape((-1, gt.shape[2], gt.shape[3])))
+        # print(output.shape,gt.shape,gt.reshape((-1, gt.shape[2], gt.shape[3])).shape)
+        # print(output,gt)
+        # loss = criterion(output, gt.reshape((-1, gt.shape[2], gt.shape[3])))
+        loss = criterion(output, gt)
         log.debug("output.shape:{},gt.shape:{}".format(output.shape,gt.shape))
         loss.backward()
         optimizer.step()
@@ -120,7 +123,7 @@ for epoch in range(1,num_epochs+1):
                 loss = criterion(output, gt.reshape((-1, gt.shape[2], gt.shape[3])))
                 error += loss.item()
             
-            writer.add_scalar('test/weighed/loss+idx_loss',error,iter) # 绘制折线图
+            writer.add_scalar('test/weighed/loss'+idx_loss,error,iter) # 绘制折线图
 
 log.info('训练结束')
 writer.close()
