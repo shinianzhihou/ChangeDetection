@@ -33,6 +33,7 @@ weight_decay = cf.weight_decay
 show_every = cf.show_every
 save_every = cf.save_every
 test_every = cf.test_every
+image_every = cf.image_every
 save_path = cf.save_path
 log.info('配置加载完成')
 
@@ -57,7 +58,7 @@ testLoader = DataLoader(dataset=testSet,
 log.info('数据集准备完成')
 
 # net
-net = SiameseUnet(3,1)
+net = SiameseUnet(3,2)
 # gpu
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 if cf.use_gpu:
@@ -68,7 +69,7 @@ if cf.use_gpu:
 
 # optimizer and criterion
 # criterion = loss()
-criterion = nn.BCEWithLogitsLoss()
+criterion = nn.BCEWithLogitsLoss(pos_weight=torch.Tensor([0.3,0.7]))
 
 optimizer = optim.SGD(net.parameters(), lr=leaning_rate,
                       momentum=momentum, weight_decay=weight_decay)
@@ -79,7 +80,8 @@ img1, img2, gt = data[0].to(device), data[1].to(device), data[2].to(device)
 writer.add_graph(net,(img1,img2)) # 网络结构
 iter = 0 # 折线图横坐标
 
-idx_loss = '_3'
+idx_loss = '_4'
+idx_img = '_2'
 
 # train
 log.info('开始训练')
@@ -120,10 +122,19 @@ for epoch in range(1,num_epochs+1):
                 img1, img2, gt = data[0].to(device), data[1].to(
             device), data[2].to(device)
                 output = net.forward(img1,img2)
-                loss = criterion(output, gt.reshape((-1, gt.shape[2], gt.shape[3])))
+                # loss = criterion(output, gt.reshape((-1, gt.shape[2], gt.shape[3])))
+                loss = criterion(output, gt)
                 error += loss.item()
-            
             writer.add_scalar('test/weighed/loss'+idx_loss,error,iter) # 绘制折线图
+
+        if iter % image_every == 0:
+            # print(gt,output)
+            # 这里的 gt 是归一化后的 gt, 因此进行保存时需要更改
+            gt[gt>0]=1
+            writer.add_images('input_image1'+idx_img,img1,global_step=iter//image_every)
+            writer.add_images('input_image2'+idx_img,img2,global_step=iter//image_every)
+            writer.add_images('output_image'+idx_img,torch.argmax(output,dim=1,keepdim=True),global_step=iter//image_every)
+            writer.add_images('gt_image'+idx_img,gt[:,0:1,:,:],global_step=iter//image_every,)
 
 log.info('训练结束')
 writer.close()

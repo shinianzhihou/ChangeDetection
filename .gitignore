@@ -6,6 +6,6 @@ log.log
 __pycache*
 tensorboard
 models/
-
+xqf/
 
 

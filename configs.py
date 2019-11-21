@@ -15,6 +15,7 @@ class Config:
     show_every = 100
     save_every = 10000
     test_every = 10000
+    image_every = 5
 
     save_path = './models/'
 

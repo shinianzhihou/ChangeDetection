@@ -22,10 +22,15 @@ class myData(Dataset):
         # img2 = self.data.loc[index,'img2']
         # gt = self.data.loc[index,'GT']
         transform = self.transform
-        img1 = plt.imread(self.data.loc[index,'img1'])
-        img2 = plt.imread(self.data.loc[index,'img2'])
-        gt = plt.imread(self.data.loc[index,'GT']) # batch_size*1*112*112
+        img1 = mpimg.imread(self.data.loc[index,'img1'])
+        img2 = mpimg.imread(self.data.loc[index,'img2'])
+        gt = mpimg.imread(self.data.loc[index,'GT']) # batch_size*1*112*112
         gt_name = self.data.loc[index,'GT']
+        # print(gt.shape)
+        gt = gt.reshape((112,112,-1))[:,:,0:1]
+        # print(gt.shape)
+
+        gt = np.concatenate((gt,1-gt),axis=2)
         # gt = gt.reshape((112,112,1))
 
         if transform:

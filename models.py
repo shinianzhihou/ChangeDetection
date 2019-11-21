@@ -57,6 +57,7 @@ class SiameseUnet(nn.Module):
         self.Sup3 = Up(256, 64, bilinear)
         self.Sup4 = Up(128, 64, bilinear)
         self.Soutc = OutConv(64, n_classes)
+        self.soft = nn.Softmax(dim=1)
 
     def forward(self, x, y):
         # Optical
@@ -77,8 +78,10 @@ class SiameseUnet(nn.Module):
         z = self.Sup2(z, x3)
         z = self.Sup3(z, x2)
         z = self.Sup4(z, x1)
-        logits = self.Soutc(z)
-        return logits
+        z = self.Soutc(z)
+        z = self.soft(z)
+        out = torch.argmax(z,dim=2,keepdim=True)
+        return z
 
 
 class SiameseNet(nn.Module):

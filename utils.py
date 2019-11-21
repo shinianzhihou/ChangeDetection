@@ -4,6 +4,41 @@ import logging
 import os
 
 import pandas as pd
+import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
+import cv2
+
+
+
+def getHeteroDate(imgRoot='datasets/Heterogeneous/',gtRoot='datasets/Heterogeneous/',targetRoot='./',name='heteroData.csv'):
+    '''
+    此函数用于将异源图像（SAR＆Optical）进行分割得到并存储数据集
+    '''
+    sar = [] # source image
+    opt = [] # source image
+    gt = [] # source image
+    im1s = [] # processed image
+    im2s = [] # processed image
+    gts = [] # processed image
+    for root,dirs,files in os.walk(imgRoot):
+        for file in files:
+            if 'sar.png' in file:
+                sar.append(root+file)
+            elif 'opt.png' in file:
+                opt.append(root+file)
+            elif 'gt.png' in file and '_' not in file:
+                gt.append(root+file)
+        break # 不对立面的目录进行遍历
+    for img in gts:
+        tg = mpimg.imread(img)
+        mask = np.concatenate((tg[:,:,0:1],tg[:,:,0:1]))
+        
+
+
+
+    mask = np.concatenate()
+
+    print(sar,opt,gt,sep='\n--------\n')
 
 
 def getDataFile(imgRoot=None, gtRoot=None, targetRoot='./', name='data.csv'):
@@ -60,12 +95,5 @@ def log(filename='./log.log',level=logging.INFO):
     return log
 
 if __name__ == "__main__":
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        filename='./log.log')
-    log = logging.getLogger(__name__)
-    log.info('开始执行')
-    data = getDataFile('datasets/train/', 'datasets/trainGT/', name='data.csv')
-    train, test = split(data, frac=0.6)
-    log.info('结束执行')
+    l = log()
+    getHeteroDate()   
