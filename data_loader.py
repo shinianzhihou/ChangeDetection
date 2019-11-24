@@ -22,11 +22,11 @@ class myData(Dataset):
         # img2 = self.data.loc[index,'img2']
         # gt = self.data.loc[index,'GT']
         transform = self.transform
-        img1 = mpimg.imread(self.data.loc[index,'img1'])
-        img2 = mpimg.imread(self.data.loc[index,'img2'])
+        img1 = mpimg.imread(self.data.loc[index,'img1'])[:,:,:3]
+        img2 = mpimg.imread(self.data.loc[index,'img2'])[:,:,:3]
         gt = mpimg.imread(self.data.loc[index,'GT']) # batch_size*1*112*112
         gt_name = self.data.loc[index,'GT']
-        # print(gt.shape)
+        # print(gt.shape,img1.shape)
         gt = gt.reshape((112,112,-1))[:,:,0:1]
         # print(gt.shape)
 
@@ -44,7 +44,7 @@ class myData(Dataset):
 
         return len(self.data)
 
-# if __name__=="__main":
-#     mydata = myData()
-#     img1,img2,gt = mydata.__getitem__(2)
-#     print(gt.shape)
+if __name__=="__main":
+    mydata = myData()
+    img1,img2,gt = mydata.__getitem__(2)
+    print(gt.shape)

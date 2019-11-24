@@ -37,7 +37,7 @@ class Down(nn.Module):
         return self.maxpool_double_conv(x)
 
 class Up(nn.Module):
-    """Upscaling then double conv"""
+    # 上采样后卷积两次
 
     def __init__(self, in_channels, out_channels, bilinear=True):
         super().__init__()
