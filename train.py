@@ -43,15 +43,15 @@ data_transforms = transforms.Compose([
     transforms.ToTensor(),
 ])
 ## Homogeneous
-# trainSet = myData(dataPath='./train.csv',
-#                   transform=data_transforms)
-# testSet = myData(dataPath='./test.csv',
-#                  transform=data_transforms)
-## Heterogeneous
-trainSet = myData(dataPath='datasets/Heterogeneous/train.csv',
+trainSet = myData(dataPath='./train.csv',
                   transform=data_transforms)
-testSet = myData(dataPath='datasets/Heterogeneous/test.csv',
+testSet = myData(dataPath='./test.csv',
                  transform=data_transforms)
+## Heterogeneous
+# trainSet = myData(dataPath='datasets/Heterogeneous/train.csv',
+#                   transform=data_transforms)
+# testSet = myData(dataPath='datasets/Heterogeneous/test.csv',
+#                  transform=data_transforms)
 ## Change the path to save Heterogeneous model
 # save_path = './models/Heterogeneous/'
 
@@ -77,9 +77,10 @@ if cf.use_gpu:
 # net.train()
 
 # optimizer and criterion
-# criterion = loss()
-# criterion = nn.BCEWithLogitsLoss(pos_weight=torch.Tensor([0.3,0.7]))
-criterion = nn.BCEWithLogitsLoss()
+# criterion = nn.BCEWithLogitsLoss()
+# criterion = myloss()
+criterion = nn.BCELoss()
+
 optimizer = optim.SGD(net.parameters(), lr=leaning_rate,
                       momentum=momentum, weight_decay=weight_decay)
 # print(net.eval())
@@ -89,8 +90,12 @@ img1, img2, gt = data[0].to(device), data[1].to(device), data[2].to(device)
 writer.add_graph(net, (img1, img2))  # 网络结构
 iter = 0  # 折线图横坐标
 
-idx_loss = '_0'
-idx_img = '_0'
+identify = 'Homo_BCELoss_1e-3'
+idx_loss = identify
+idx_img = identify
+
+# idx_loss = '_0'
+# idx_img = '_0'
 
 # train
 log.info('开始训练')
@@ -101,7 +106,7 @@ for epoch in range(1, num_epochs+1):
             device), data[2].to(device)
         optimizer.zero_grad()
         output = net(img1, img2)
-        loss = criterion(output, gt)
+        loss = criterion(output,gt)
         # log.info(output.shape,gt.shape)
         loss.backward()
         optimizer.step()
@@ -143,7 +148,7 @@ for epoch in range(1, num_epochs+1):
                               global_step=iter//image_every)
             writer.add_images('image2'+idx_img, img2,
                               global_step=iter//image_every)
-            writer.add_images('output'+idx_img, torch.argmax(output,
+            writer.add_images('output'+idx_img, torch.argmin(output,
                                                              dim=1, keepdim=True), global_step=iter//image_every)
             # writer.add_images('output_image'+idx_img,output,global_step=iter//image_every)
             writer.add_images('gt'+idx_img,
