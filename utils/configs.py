@@ -3,7 +3,6 @@ import torch
 class States(object):
     
     def __init__(self, cfg):
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.current_batch = -1
         self.curren_epoch = -1
         self.best_metric = dict(zip(cfg.EVAL.METRIC,cfg.EVAL.INITIAL_METRIC))

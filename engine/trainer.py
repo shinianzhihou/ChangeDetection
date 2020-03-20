@@ -1,22 +1,12 @@
-import argparse
 import os
 import time
 
 import torch
-from torch import optim
-from torch.utils.data import DataLoader
-from torch.optim.lr_scheduler import CosineAnnealingLR
-from tensorboardX import SummaryWriter
 from tqdm import tqdm
 
-from configs import cfg
-from data import Lab
-from model import SiameseUnet_conc, FLSiameseUnet_conc, CAFLSiameseUnet_conc
-from solver.transforms import *
 from utils.checkpoints import lcwo, scwo
-from utils.configs import States
-from utils.metric import get_metric, update_metric
 from utils.eval import eval_model
+from utils.metric import get_metric, update_metric
 
 
 def train_epoch(

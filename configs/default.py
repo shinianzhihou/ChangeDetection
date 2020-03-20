@@ -11,13 +11,16 @@ _C.BUILD.DATALOADER.CHOICE = "OSCD"
 _C.BUILD.DATALOADER.USE_PART = "all" # "all", "change", "unchange"
 ## Loss
 _C.BUILD.LOSS = CN()
-_C.BUILD.LOSS.CHOICE = "bceloss"
+_C.BUILD.LOSS.CHOICE = "BCELoss"
+_C.BUILD.LOSS.REDUCTION = "mean"
 ### class balancing
 _C.BUILD.LOSS.USE_POS_WEIGHT = True # BCEWithLogitsLoss
 _C.BUILD.LOSS.POS_WEIGHT = 1.0
 ## Model
 _C.BUILD.MODEL = CN()
-_C.BUILD.MODEL.CHOICE = "siamese_unet_conc"
+_C.BUILD.MODEL.CHOICE = "Siamese_unet_conc"
+_C.BUILD.MODEL.IN_CHANNEL = 3
+_C.BUILD.MODEL.OUT_CHANNEL = 2
 _C.BUILD.MODEL.P_DROPOUT = 0.0
 _C.BUILD.MODEL.CHANNEL_ATTENTION = True # some tricks
 ## Optimizer
@@ -44,6 +47,7 @@ _C.DATASETS.TEST_CSV = "test.csv"
 _C.DATALOADER = CN()
 _C.DATALOADER.BATCH_SIZE = 32
 _C.DATALOADER.NUM_WORKERS = 0
+_C.DATALOADER.SHUFFLE = False
 
 # Eval
 _C.EVAL = CN()

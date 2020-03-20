@@ -5,9 +5,9 @@ import torch.nn.functional as F
 from layers.normal import ConvBnReluDrop
 
 
-class FLSiameseUnet_conc(nn.Module):
-    def __init__(self, in_c, out_c, p_drop=0.2):
-        super(FLSiameseUnet_conc, self).__init__()
+class Siamese_unet_conc(nn.Module):
+    def __init__(self, in_c, out_c, p_drop=0.0):
+        super(Siamese_unet_conc, self).__init__()
 
         ####################################################
         # sar and opt
