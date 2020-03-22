@@ -26,5 +26,7 @@ class RandomVerticalFlip(transforms.RandomVerticalFlip):
 class RandomRotation(transforms.RandomRotation):
   def __call__(self,imgs):
     angle = self.get_params(self.degrees)
-    return [img.rotate(angle,self.resample,self.expand,self.center,fillcolor=self.fill) for img in imgs]
-
+    try:
+      return [img.rotate(angle,self.resample,self.expand,self.center,fillcolor=self.fill) for img in imgs] # torchvision
+    except:
+      return [img.rotate(angle,self.resample,self.expand,self.center) for img in imgs]

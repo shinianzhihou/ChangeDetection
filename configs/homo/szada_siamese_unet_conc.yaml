@@ -1,14 +1,14 @@
 BUILD:
   DATALOADER:
-    CHOICE: "Lab"
+    CHOICE: "Szada"
   LOSS:
     CHOICE: "BCEWithLogitsLoss"
     REDUCTION: "mean"
     USE_POS_WEIGHT: True
-    POS_WEIGHT: 10.0
+    POS_WEIGHT: 4
   MODEL:
     CHOICE: "Siamese_unet_conc"
-    IN_CHANNEL: 1
+    IN_CHANNEL: 3
     OUT_CHANNEL: 2
   OPTIMIZER:
     CHOICE: "SGD"
@@ -22,8 +22,8 @@ CHECKPOINT:
   PERIOD: 100
   
 DATASETS:
-  TRAIN_CSV: "/data/SNian/Lab/lab/1/train.csv"
-  TEST_CSV: "/data/SNian/Lab/lab/1/test.csv"
+  TRAIN_CSV: "data/Szada/train.csv"
+  TEST_CSV: "data/Szada/test.csv"
 
 DATALOADER:
   BATCH_SIZE: 32

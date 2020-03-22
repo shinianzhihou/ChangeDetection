@@ -1,8 +1,7 @@
 from torch.utils.data import DataLoader
 
 from data.isprs import ISPRS
-from data.lab import Lab
-
+from data.normal import Normal
 # TODO(SNian) : add some other dataloaders
 
 def build_dataloader(cfg, test=False):
@@ -10,8 +9,8 @@ def build_dataloader(cfg, test=False):
 
     csv_path = cfg.DATASETS.TEST_CSV if test else cfg.DATASETS.TRAIN_CSV
     datasets_map = {
-        "ISPRS": ISPRS(csv_path),
-        "Lab": Lab(csv_path)
+        "Szada": ISPRS(csv_path),
+        "Lab": Normal(csv_path)
     }
 
     assert dcfg.CHOICE in datasets_map.keys()
