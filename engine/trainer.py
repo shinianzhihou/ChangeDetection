@@ -21,95 +21,58 @@ def train_epoch(
     test_loader=None
     ):
 
-    curren_epoch = states.curren_epoch
-    num_epoch = states.num_epoch
-
-    num_batch = train_loader.__len__()
-    device = states.device
-
     bar_format = '{desc}{percentage:3.0f}%|[{elapsed}<{remaining},{rate_fmt}]'
     pbar = tqdm(train_loader,bar_format=bar_format)
 
-    for batch, data in enumerate(train_loader):
+    for batch, data in enumerate(pbar):
         states.step("current_batch")
         current_batch = states.current_batch
 
         model.train()
-        img1, img2, gt = [img.to(device) for img in data]
+        img1, img2, gt = [img.to(cfg.MODEL.DEVICE) for img in data]
         optimizer.zero_grad()
-        output, floss = model(img1, img2)
-        bceloss = criterion(output, gt)
-        loss = bceloss+floss if states.add_floss else bceloss
+        output = model(img1, img2)
+        loss = criterion(output, gt)
         loss.backward()
         optimizer.step()
         scheduler.step()
 
         print_str = " | ".join([
-            "feature loss:%5s" % (states.add_floss),
-            "epoch:%3d/%3d" % (curren_epoch, num_epoch),
-            "batch:%3d/%3d" % (batch, num_batch),
+            "epoch:%3d/%3d" % (states.current_epoch, cfg.SOLVER.NUM_EPOCH),
+            "batch:%3d/%3d" % (batch, train_loader.__len__()),
             "loss:%.3f" % (loss.item()),
-            "bceloss:%.3f" % (bceloss.item()),
-            "floss:%.3e" % (floss.item()),
         ])
         pbar.set_description(print_str, refresh=True)
 
-        if cfg.TENSORBOARD.USE_TENSORBOARD:
-            prefix = "train/"
-            scalar = {
-                "bceloss:" : bceloss.item(),
-                "floss": floss.item(),
+        # TODO(SNian) : make it optional 
+        if writer:
+            scalars = {
                 "loss": loss.item(),
                 "lr": scheduler.get_lr()[0],
             }
+            writer.add_scalars("train/", scalars, current_batch)
 
-            images = {
-                "image1": img1,
-                "image2": img2,
-                "gt": gt[:, 1:2, :, :],
-                "output": torch.argmax(output, dim=1, keepdim=True)
-            }
 
-            for key, value in scalar.items():
-                writer.add_scalar(prefix+key, value, current_batch)
-
-            if not current_batch % cfg.SOLVER.IMAGE_EVERY:
-                step = current_batch // cfg.SOLVER.IMAGE_EVERY
-                for key, value in images.items():
-                    writer.add_images(prefix+key, value, step)
-                    
-            if not current_batch % cfg.SOLVER.METRIC_EVERY:
-                step = current_batch // cfg.SOLVER.METRIC_EVERY
-                out_tensor = torch.argmax(output, dim=1, keepdim=True).type_as(output)
-                gt_tensor = gt[:,1,:,:]
-                metric = get_metric(out_tensor,gt_tensor)
-                metric_values = [metric.get(key).item() for key in cfg.EVAL.METRIC]
-                metric_scalar = dict(zip(cfg.EVAL.METRIC,metric_values))
-                writer.add_scalars("train/metric",metric_scalar,step)
-                
-            if not current_batch % cfg.SOLVER.TEST_EVERY and test_loader:
-                step = current_batch // cfg.SOLVER.TEST_EVERY
+            if test_loader and not current_batch % cfg.SOLVER.TEST_PERIOD:
+                step = current_batch // cfg.SOLVER.TEST_PERIOD
                 metric = eval_model(model,test_loader,cfg,writer,step)
-                num_update,metric = update_metric(states.best_metric,metric)
-                if num_update > 0:
-                    states.update("best_metric",metric)
-                    cp_name = "%s_%s_epoch_%d_batch_%d.pt" % (
-                        time.strftime("%Y-%m-%d-%H-%M"),
-                        model._get_name(),
-                        curren_epoch,
-                        batch
-                    )
-                    cp_path = os.path.join(cfg.SOLVER.CHECKPOINT_PATH, cp_name)
-                    scwo(cp_path, model, optimizer)
-                
+                writer.add_scalars("train/metric",metric,step)
+                if cfg.SOLVER.TEST_BETTER_SAVE:
+                    num_update,metric = update_metric(states.best_metric,metric)
+                    if num_update > 0:
+                        states.update("best_metric",metric)
+                        scwo_epoch_batch(states.curren_epoch,batch,cfg.CHECKPOINT.PATH,model,optimizer)
 
-        if cfg.SOLVER.USE_CHECKPOINT:
-            if not current_batch % cfg.SOLVER.CHECKPOINT_PERIOD:
-                cp_name = "%s_%s_epoch_%d_batch_%d.pt" % (
-                    time.strftime("%Y-%m-%d-%H-%M"),
-                    model._get_name(),
-                    curren_epoch,
-                    batch
-                )
-                cp_path = os.path.join(cfg.SOLVER.CHECKPOINT_PATH, cp_name)
-                scwo(cp_path, model, optimizer)
+        if cfg.BUILD.USE_CHECKPOINT and not current_batch % cfg.CHECKPOINT.PERIOD:
+            scwo_epoch_batch(states.curren_epoch,batch,cfg.CHECKPOINT.PATH,model,optimizer)
+
+
+def scwo_epoch_batch(epoch,batch,root,model,optimizer):
+    '''Save checkpoint with specific name.'''
+    cp_name = "%s_%s_epoch_%d_batch_%d.pt" % (
+        time.strftime("%Y-%m-%d-%H-%M"),
+        model._get_name(),
+        epoch,
+        batch
+    )
+    scwo(os.path.join(root, cp_name), model, optimizer)

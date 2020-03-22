@@ -1,6 +1,7 @@
 import torch
 from torch.nn import BCELoss, BCEWithLogitsLoss
 
+# TODO(SNian) : add focal loss
 
 def build_loss(cfg):
     lcfg = cfg.BUILD.LOSS

@@ -1,0 +1,59 @@
+BUILD:
+  DATALOADER:
+    CHOICE: "Lab"
+  LOSS:
+    CHOICE: "BCEWithLogitsLoss"
+    REDUCTION: "mean"
+    USE_POS_WEIGHT: True
+    POS_WEIGHT: 10.0
+  MODEL:
+    CHOICE: "Siamese_unet_conc"
+    IN_CHANNEL: 1
+    OUT_CHANNEL: 2
+  OPTIMIZER:
+    CHOICE: "SGD"
+  LR_SCHEDULER:
+    CHOICE: "WarmupCosineLR"
+  USE_CHECKPOINT: False
+  USE_TENSORBOARD: False
+  
+CHECKPOINT:
+  PATH: "/output/"
+  PERIOD: 100
+  
+DATASETS:
+  TRAIN_CSV: "/data/SNian/Lab/lab/1/train.csv"
+  TEST_CSV: "/data/SNian/Lab/lab/1/test.csv"
+
+DATALOADER:
+  BATCH_SIZE: 32
+  NUM_WORKERS: 0
+  SHUFFLE: True
+  
+EVAL:
+  METRIC: ["F1","PCC","Kappa"]
+  INITIAL_METRIC: [0.2, 0.8, 0.3]
+
+MODEL:
+  DEVICE: "cuda"
+  
+SOLVER:
+  BASE_LR: 0.001
+  NUM_EPOCH: 200
+  MOMENTUM: 0.9
+  WEIGHT_DECAY: 0.0005
+  WEIGHT_DECAY_BIAS: 0
+  TEST_WHEN_TRAIN: True
+  TEST_PERIOD: 100
+  TEST_BETTER_SAVE: True
+  
+  LR_SCHEDULER:
+    MAX_ITERS: 20
+    LAST_EPOCH: -1
+    WARMUP_FACTOR: 0.05
+    WARMUP_ITERS: 20
+    WARMUP_METHOD: "linear"
+    
+TENSORBOARD:
+  ID: ""
+  PATH: "/output/logs/"

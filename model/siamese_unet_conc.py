@@ -21,7 +21,7 @@ class Siamese_unet_conc(nn.Module):
             ConvBnReluDrop(32, 32, p=p_drop),
         )
 
-        self.feature_13 = nn.Sequential(
+        self.feature_3 = nn.Sequential(
             ConvBnReluDrop(32, 64, p=p_drop),
             ConvBnReluDrop(64, 64, p=p_drop),
             ConvBnReluDrop(64, 64, p=p_drop),

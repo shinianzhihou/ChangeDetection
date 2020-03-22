@@ -1,10 +1,11 @@
 from model.siamese_unet_conc import Siamese_unet_conc
 
-'''
-- Why not directly import the models and their configs like `Siamese_unet_conc(3,2,0.0)`?
-- When the configs about models need to be changed, you can easily 
-  change them in `.yaml` files and don't need to open the script here.
-'''
+# Q1 Why not directly import the models and their configs like `Siamese_unet_conc(3,2,0.0)`?
+# A1 When the configs about models need to be changed, you can easily 
+#  change them in `.yaml` files and don't need to open the script here.
+
+# TODO(SNian) : test whether the `map` will increase the used memory.
+# TODO(SNian) : add some other models
 
 def build_model(cfg):
 
