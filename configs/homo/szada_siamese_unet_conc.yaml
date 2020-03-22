@@ -5,7 +5,7 @@ BUILD:
     CHOICE: "BCEWithLogitsLoss"
     REDUCTION: "mean"
     USE_POS_WEIGHT: True
-    POS_WEIGHT: 4
+    POS_WEIGHT: 4.0
   MODEL:
     CHOICE: "Siamese_unet_conc"
     IN_CHANNEL: 3
@@ -15,7 +15,7 @@ BUILD:
   LR_SCHEDULER:
     CHOICE: "WarmupCosineLR"
   USE_CHECKPOINT: False
-  USE_TENSORBOARD: False
+  USE_TENSORBOARD: True
   
 CHECKPOINT:
   PATH: "/output/"
@@ -43,7 +43,7 @@ SOLVER:
   MOMENTUM: 0.9
   WEIGHT_DECAY: 0.0005
   WEIGHT_DECAY_BIAS: 0
-  TEST_WHEN_TRAIN: True
+  TEST_WHEN_TRAIN: False
   TEST_PERIOD: 100
   TEST_BETTER_SAVE: True
   
@@ -56,4 +56,4 @@ SOLVER:
     
 TENSORBOARD:
   ID: ""
-  PATH: "/output/logs/"
+  PATH: "logs/tensorboard/"

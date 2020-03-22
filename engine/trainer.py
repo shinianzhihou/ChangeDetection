@@ -53,15 +53,15 @@ def train_epoch(
             writer.add_scalars("train/", scalars, current_batch)
 
 
-            if test_loader and not current_batch % cfg.SOLVER.TEST_PERIOD:
-                step = current_batch // cfg.SOLVER.TEST_PERIOD
-                metric = eval_model(model,test_loader,cfg,writer,step)
-                writer.add_scalars("train/metric",metric,step)
-                if cfg.SOLVER.TEST_BETTER_SAVE:
-                    num_update,metric = update_metric(states.best_metric,metric)
-                    if num_update > 0:
-                        states.update("best_metric",metric)
-                        scwo_epoch_batch(states.curren_epoch,batch,cfg.CHECKPOINT.PATH,model,optimizer)
+        if test_loader and not current_batch % cfg.SOLVER.TEST_PERIOD:
+            step = current_batch // cfg.SOLVER.TEST_PERIOD
+            metric = eval_model(model,test_loader,cfg,writer,step)
+            writer.add_scalars("train/metric",metric,step)
+            if cfg.SOLVER.TEST_BETTER_SAVE:
+                num_update,metric = update_metric(states.best_metric,metric)
+                if num_update > 0:
+                    states.update("best_metric",metric)
+                    scwo_epoch_batch(states.curren_epoch,batch,cfg.CHECKPOINT.PATH,model,optimizer)
 
         if cfg.BUILD.USE_CHECKPOINT and not current_batch % cfg.CHECKPOINT.PERIOD:
             scwo_epoch_batch(states.curren_epoch,batch,cfg.CHECKPOINT.PATH,model,optimizer)
