@@ -7,7 +7,7 @@ def build_tensorboad(cfg):
         return None
     tcfg = cfg.TENSORBOARD
     ID = cfg.BUILD.MODEL.CHOICE if tcfg.ID == "" else tcfg.ID
-    name = "%s_%s" % (ID, time.strftime("%Y-%m-%d-%H-%M"))
+    name = "%s/%s" % ( time.strftime("%Y-%m-%d-%H-%M"),ID)
     path = os.path.join(tcfg.PATH, name)
     writer = SummaryWriter(path)
     writer.add_text("config", str(cfg), 0)

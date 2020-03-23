@@ -20,14 +20,12 @@ def run_train(cfg):
     states = States(cfg)
 
     train_loader = build_dataloader(cfg)
-    test_loader = build_dataloader(cfg, test=True) if cfg.SOLVER.TEST_WHEN_TRAIN else None
-
+    test_loader = build_dataloader(cfg, test=True) if cfg.BUILD.TEST_WHEN_TRAIN else None
     model = build_model(cfg).to(cfg.MODEL.DEVICE)
     optimizer = build_optimizer(cfg, model)
     model,optimizer,states = build_checkpoint(cfg, model, optimizer,states)
     criterion = build_loss(cfg)
-    scheduler = build_scheduler(
-        cfg, optimizer, max_iters=train_loader.__len__())
+    scheduler = build_scheduler(cfg, optimizer, max_iters=train_loader.__len__())
     writer = build_tensorboad(cfg)
 
     for epoch in range(cfg.SOLVER.NUM_EPOCH):

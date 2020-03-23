@@ -16,10 +16,11 @@ def build_dataloader(cfg, test=False):
     assert dcfg.CHOICE in datasets_map.keys()
 
     datasets = datasets_map[dcfg.CHOICE]
-
+    bs = cfg.DATALOADER.TEST_BATCH_SIZE if test else cfg.DATALOADER.BATCH_SIZE
+    shuffle = cfg.DATALOADER.TEST_SHUFFLE if test else cfg.DATALOADER.SHUFFLE
     dataloader = DataLoader(dataset=datasets,
-                            batch_size=cfg.DATALOADER.BATCH_SIZE,
+                            batch_size=bs,
                             num_workers=cfg.DATALOADER.NUM_WORKERS,
-                            shuffle=cfg.DATALOADER.SHUFFLE)
+                            shuffle=shuffle)
 
     return dataloader
