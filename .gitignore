@@ -150,13 +150,11 @@ log.log
 .ipynb*
 __pycache*
 tensorboard
-models/
-xqf/
 
 
 Untitled.ipynb
 data/*/
 checkpoint/*
-logs/eval.csv
+logs/
 utils/mail.py
-logs/eval.csv
+
