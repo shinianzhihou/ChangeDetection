@@ -23,7 +23,6 @@ def run_eval(cfg,save_max_imgs=False):
         model = lcwo(cp_path,model)
         metric = eval_model(model,test_loader,cfg)
         save_value = [cp_path] + [v.item() for k,v in metric.items()]
-        print("%d/%d:%s"%(idx,len(cp_paths),save_value[1:])) # FIXME delete
         test_res.loc[test_res.shape[0]] = save_value
 
     test_res.to_csv(os.path.join(cfg.EVAL.SAVE_PATH,cfg.EVAL.SAVE_NAME),index=False)

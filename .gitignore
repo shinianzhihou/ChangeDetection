@@ -156,4 +156,7 @@ xqf/
 
 Untitled.ipynb
 data/*/
-checkpoint/
+checkpoint/*
+logs/eval.csv
+utils/mail.py
+logs/eval.csv

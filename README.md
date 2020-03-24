@@ -3,6 +3,8 @@
 
 A framework for change detection using PyTorch. It is one part of [easy2train](#change-detection)
 
+[中文版本](.github/README_CN.md)
+
 
 ## Table of Contents
 
@@ -28,20 +30,10 @@ A framework for change detection using PyTorch. It is one part of [easy2train](#
 
 ### Installing
 
-Check [INSTALL.md](.github/INSTALL.md) for installation instructions.
-
-- PC 
-- [AI Studio](.github/INSTALL.md/#ai-studio) 
-- [Colab](.github/INSTALL.md/#colab)
-
 ## Adding your own model
 
 
 ## TODO
-
-[TODO](.github/TODO.md)
-
-
 
 
 ## Acknowledgements
