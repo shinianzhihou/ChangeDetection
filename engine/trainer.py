@@ -50,7 +50,6 @@ def train_epoch(
             writer.add_scalar("train/lr", scheduler.get_lr()[0], current_batch)
 
 
-
         if test_loader and not current_batch % cfg.SOLVER.TEST_PERIOD:
             step = current_batch // cfg.SOLVER.TEST_PERIOD
             del img1,img2,gt,output

@@ -10,6 +10,6 @@ def build_tensorboad(cfg):
     name = "%s/%s" % ( time.strftime("%Y-%m-%d-%H-%M"),ID)
     path = os.path.join(tcfg.PATH, name)
     writer = SummaryWriter(path)
-    writer.add_text("config", str(cfg), 0)
+    # writer.add_text("config", str(cfg), 0)
     return writer
 
