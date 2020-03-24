@@ -1,4 +1,6 @@
 from model.siamese_unet_conc import Siamese_unet_conc
+from model.siamese_unet_diff import Siamese_unet_diff
+
 
 # Q1 Why not directly import the models and their configs like `Siamese_unet_conc(3,2,0.0)`?
 # A1 When the configs about models need to be changed, you can easily 
@@ -13,7 +15,7 @@ def build_model(cfg):
 
     model_map = {
         "Siamese_unet_conc" : Siamese_unet_conc(mcfg.IN_CHANNEL,mcfg.OUT_CHANNEL,mcfg.P_DROPOUT),
-        "Siamese_unet_diff" : Siamese_unet_conc(mcfg.IN_CHANNEL,mcfg.OUT_CHANNEL,mcfg.P_DROPOUT),
+        "Siamese_unet_diff" : Siamese_unet_diff(mcfg.IN_CHANNEL,mcfg.OUT_CHANNEL,mcfg.P_DROPOUT),
     }
 
     assert mcfg.CHOICE in model_map.keys()

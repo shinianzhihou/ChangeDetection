@@ -73,18 +73,18 @@ class Siamese_unet_diff(nn.Module):
 
     def forward(self, x1, x2):
         ####################################################
-        # sar
-        x11 = self.feature_11(x1)
-        x12 = self.feature_12(F.max_pool2d(x11, kernel_size=2, stride=2))
-        x13 = self.feature_13(F.max_pool2d(x12, kernel_size=2, stride=2))
-        x14 = self.feature_14(F.max_pool2d(x13, kernel_size=2, stride=2))
+        # img1
+        x11 = self.feature_1(x1)
+        x12 = self.feature_2(F.max_pool2d(x11, kernel_size=2, stride=2))
+        x13 = self.feature_3(F.max_pool2d(x12, kernel_size=2, stride=2))
+        x14 = self.feature_4(F.max_pool2d(x13, kernel_size=2, stride=2))
         x15 = F.max_pool2d(x14, kernel_size=2, stride=2)
         ####################################################
         # opt
-        x21 = self.feature_21(x2)
-        x22 = self.feature_22(F.max_pool2d(x21, kernel_size=2, stride=2))
-        x23 = self.feature_23(F.max_pool2d(x22, kernel_size=2, stride=2))
-        x24 = self.feature_24(F.max_pool2d(x23, kernel_size=2, stride=2))
+        x21 = self.feature_1(x2)
+        x22 = self.feature_2(F.max_pool2d(x21, kernel_size=2, stride=2))
+        x23 = self.feature_3(F.max_pool2d(x22, kernel_size=2, stride=2))
+        x24 = self.feature_4(F.max_pool2d(x23, kernel_size=2, stride=2))
         x25 = F.max_pool2d(x24, kernel_size=2, stride=2)
         ####################################################
         # fusion(x1,x2,x3) and up

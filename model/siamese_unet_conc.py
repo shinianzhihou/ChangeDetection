@@ -72,14 +72,14 @@ class Siamese_unet_conc(nn.Module):
 
     def forward(self, x1, x2):
         ####################################################
-        # sar
+        # img1
         x11 = self.feature_1(x1)
         x12 = self.feature_2(F.max_pool2d(x11, kernel_size=2, stride=2))
         x13 = self.feature_3(F.max_pool2d(x12, kernel_size=2, stride=2))
         x14 = self.feature_4(F.max_pool2d(x13, kernel_size=2, stride=2))
         x15 = F.max_pool2d(x14, kernel_size=2, stride=2)
         ####################################################
-        # opt
+        # img2
         x21 = self.feature_1(x2)
         x22 = self.feature_2(F.max_pool2d(x21, kernel_size=2, stride=2))
         x23 = self.feature_3(F.max_pool2d(x22, kernel_size=2, stride=2))
