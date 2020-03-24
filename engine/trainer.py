@@ -46,25 +46,24 @@ def train_epoch(
 
         # TODO(SNian) : make it optional 
         if writer:
-            scalars = {
-                "loss": loss.item(),
-                "lr": scheduler.get_lr()[0],
-            }
-            writer.add_scalars("train/", scalars, current_batch)
+            writer.add_scalar("train/loss", loss.item(), current_batch)
+            writer.add_scalar("train/lr", scheduler.get_lr()[0], current_batch)
+
 
 
         if test_loader and not current_batch % cfg.SOLVER.TEST_PERIOD:
             step = current_batch // cfg.SOLVER.TEST_PERIOD
+            del img1,img2,gt
             metric = eval_model(model,test_loader,cfg,writer,step)
-            writer.add_scalars("train/metric",metric,step)
+            writer.add_scalars("train/metric/",metric,step)
             if cfg.SOLVER.TEST_BETTER_SAVE:
                 num_update,metric = update_metric(states.best_metric,metric)
                 if num_update > 0:
                     states.update("best_metric",metric)
-                    scwo_epoch_batch(states.curren_epoch,batch,cfg.CHECKPOINT.PATH,model,optimizer)
+                    scwo_epoch_batch(states.current_epoch,batch,cfg.CHECKPOINT.PATH,model,optimizer)
 
         if cfg.BUILD.USE_CHECKPOINT and not current_batch % cfg.CHECKPOINT.PERIOD:
-            scwo_epoch_batch(states.curren_epoch,batch,cfg.CHECKPOINT.PATH,model,optimizer)
+            scwo_epoch_batch(states.current_epoch,batch,cfg.CHECKPOINT.PATH,model,optimizer)
 
 
 def scwo_epoch_batch(epoch,batch,root,model,optimizer):

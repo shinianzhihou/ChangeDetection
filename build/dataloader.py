@@ -10,7 +10,7 @@ def build_dataloader(cfg, test=False):
     csv_path = cfg.DATASETS.TEST_CSV if test else cfg.DATASETS.TRAIN_CSV
     datasets_map = {
         "ISPRS": ISPRS(csv_path),
-        "Szada": Normal(csv_path)
+        "Szada": Normal(csv_path,test=test),
     }
 
     assert dcfg.CHOICE in datasets_map.keys()

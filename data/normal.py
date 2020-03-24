@@ -7,11 +7,12 @@ from solver.transforms import *
 
 
 class Normal(Dataset):
-    def __init__(self, csv_path, data_trans=None, mask=True):
+    def __init__(self, csv_path, data_trans=None, mask=True, test=False):
         super(Normal, self).__init__()
         self.data = pd.read_csv(csv_path)
         self.data_trans = data_trans
         self.mask = mask
+        self.test = test
 
     def __getitem__(self, index):
         path = self.data.loc[index]
@@ -19,7 +20,7 @@ class Normal(Dataset):
             path["img2"]), cv2.imread(path["gt"])]
         img_list[-1] = img_list[-1][:, :, 0:1]  # ground-truth
         if self.data_trans is None:
-            tensor_list = self._transforms(img_list)
+            tensor_list = self._test_trans(img_list) if self.test else self._transforms(img_list)
         else:
             tensor_list = self.data_trans(img_list)
 
@@ -41,6 +42,12 @@ class Normal(Dataset):
             ToTensor(),
         ])
         return data_trans(imgs)
+
+    def _test_trans(self,imgs):
+        return transforms.Compose([
+            ToPILImage(),
+            ToTensor(),
+        ])(imgs)
 
     def _operater(self, tensor_list):
         img1, img2, gt = tensor_list

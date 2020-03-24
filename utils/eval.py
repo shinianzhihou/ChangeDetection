@@ -9,6 +9,8 @@ def eval_model(
     cfg,
     writer=None,
     step=0,
+    save_img = False,
+    save_name = ""
 ):
     device = cfg.MODEL.DEVICE
     model = model.to(device).eval()
@@ -16,18 +18,19 @@ def eval_model(
         cfg.EVAL.METRIC,
         [0.0] * len(cfg.EVAL.METRIC)
     ))
-    for batch, data in enumerate(data_loader):
-        img1, img2, gt = [img.to(device) for img in data]
-        output = model(img1, img2)
+    with torch.no_grad():
+        for batch, data in enumerate(data_loader):
+            img1, img2, gt = [img.to(device) for img in data]
+            output = model(img1, img2)
 
-        out_tensor = torch.argmax(output, dim=1, keepdim=True).type_as(output)
-        gt_tensor = gt[:, 1, :, :]
-        metric = get_metric(out_tensor, gt_tensor)
-        metric_all = add_metric(metric_all,metric)
-
-
-    metric_avg = {k : v/data_loader.__len__() for k,v in metric_all.items()}
-    writer.add_scalars("test/metric", metric_avg, step)
+            out_tensor = torch.argmax(output, dim=1, keepdim=True).type_as(output)
+            gt_tensor = gt[:, 1, :, :]
+            metric = get_metric(out_tensor, gt_tensor)
+            metric_all = add_metric(metric_all,metric)
+            
+            metric_avg = {k : v/data_loader.__len__() for k,v in metric_all.items()}
+    if writer:
+        writer.add_scalars("test/metric", metric_avg, step)
     model = model.train()
     return metric_avg
 

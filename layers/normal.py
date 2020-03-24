@@ -15,7 +15,7 @@ class ConvBnReluDrop(nn.Module):
         if self.has_bn:
             self.bn = nn.BatchNorm2d(out_c)
         if self.has_relu:
-            self.relu = nn.ReLU()
+            self.relu = nn.ReLU(inplace = True)
         if self.has_drop:
             self.drop = nn.Dropout2d(p=p)
 
