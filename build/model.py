@@ -13,6 +13,7 @@ def build_model(cfg):
 
     model_map = {
         "Siamese_unet_conc" : Siamese_unet_conc(mcfg.IN_CHANNEL,mcfg.OUT_CHANNEL,mcfg.P_DROPOUT),
+        "Siamese_unet_diff" : Siamese_unet_conc(mcfg.IN_CHANNEL,mcfg.OUT_CHANNEL,mcfg.P_DROPOUT),
     }
 
     assert mcfg.CHOICE in model_map.keys()
