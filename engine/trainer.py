@@ -55,7 +55,7 @@ def train_epoch(
             step = current_batch // cfg.SOLVER.TEST_PERIOD
             del img1,img2,gt,output
             metric = eval_model(model,test_loader,cfg,writer,step,criterion)
-            writer.add_scalars("train/metric/",metric,step)
+            writer.add_scalars("test/metric",metric,step)
             if cfg.SOLVER.TEST_BETTER_SAVE:
                 num_update,metric = update_metric(states.best_metric,metric)
                 if num_update > 0:

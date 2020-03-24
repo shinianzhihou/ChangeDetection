@@ -32,10 +32,8 @@ def eval_model(
             metric = get_metric(out_tensor, gt_tensor)
             metric_all = add_metric(metric_all,metric)
             metric_avg = {k : v/data_loader.__len__() for k,v in metric_all.items()}
-    if writer:
-        writer.add_scalars("test/metric", metric_avg, step)
-        if criterion:
-            writer.add_scalar("test/loss", loss_all/data_loader.__len__(), step)
+    if writer and criterion:
+        writer.add_scalar("test/loss", loss_all/data_loader.__len__(), step)
     model = model.train()
     return metric_avg
 
