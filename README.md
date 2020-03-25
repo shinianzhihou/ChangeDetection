@@ -38,9 +38,10 @@
 
 - **数据增强**
 
-  将数据增强放在了 “dataloader” 部分，在传统 transform 的基础上实现了对 N 个图片同时操作，保证了 Random 系列图片的一致性，默认的数据增强方式如下
-
-![augmentation](.github/images/augmentation.png)
+  将数据增强放在了 “dataloader” 部分，在传统 transform 的基础上实现了对 N 个图片同时操作，保证了 Random 系列图片的一致性，默认的数据增强方式:
+  - 以概率 $p_1$ 随机水平翻转
+  - 以概率 $p_2$ 随机垂直翻转
+  - 以概率 $p_3$ 随机旋转任意角度
 
 ## 开始使用
 
@@ -110,8 +111,9 @@ python eval_net.py -cfg configs/homo/szada_siamese_unet_conc.yaml
 | Dataset | Method            | PCC  | Re   | F1   | Kappa | checkpoint                                                   |
 | ------- | ----------------- | ---- | ---- | ---- | ----- | ------------------------------------------------------------ |
 | Szada   | Siamese_unet_conc | 96.0 | 50.9 | 54.8 | 52.7  | [OneDrive](https://drive.google.com/open?id=17WsyAgMByZB-Rcl5BZiqhoGAlKjTqz1V) |
+| Szada   | Siamese_unet_diff | 95.8 | 67.0 | 55.4 | 53.2  | [OneDrive](https://drive.google.com/open?id=1compOiumTmHTGYXkmTTKzfpEoPXL_JZj) |
 
-（单位：%）
+（取 F1 最高值的 checkpoint 作为结果，单位：%）
 
 测试结果可以在 `logs/eval.csv`（在配置文件中配置） 中查看
 
