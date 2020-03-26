@@ -18,7 +18,8 @@
     - [数据集](#%e6%95%b0%e6%8d%ae%e9%9b%86)
     - [损失函数](#%e6%8d%9f%e5%a4%b1%e5%87%bd%e6%95%b0)
   - [结果](#%e7%bb%93%e6%9e%9c)
-    - [参考](#%e5%8f%82%e8%80%83)
+  - [TODO](#todo)
+  - [参考](#%e5%8f%82%e8%80%83)
 
 ## 写在前面
 
@@ -117,6 +118,12 @@ python eval_net.py -cfg configs/homo/szada_siamese_unet_conc.yaml
 
 测试结果可以在 `logs/eval.csv`（在配置文件中配置） 中查看
 
-### 参考
+## TODO
+
+- [ ] 以同样的概率 p 对特征图进行 dropout
+- [ ] 网络中间层可视化
+- [ ] 可视化输出结果
+
+## 参考
 
 1. [maskrcnn-benchmark](https://github.com/facebookresearch/maskrcnn-benchmark)
