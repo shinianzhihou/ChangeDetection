@@ -18,6 +18,7 @@
     - [数据集](#%e6%95%b0%e6%8d%ae%e9%9b%86)
     - [损失函数](#%e6%8d%9f%e5%a4%b1%e5%87%bd%e6%95%b0)
   - [结果](#%e7%bb%93%e6%9e%9c)
+    - [结果可视化（部分）](#%e7%bb%93%e6%9e%9c%e5%8f%af%e8%a7%86%e5%8c%96%e9%83%a8%e5%88%86)
   - [TODO](#todo)
   - [参考](#%e5%8f%82%e8%80%83)
 
@@ -76,7 +77,7 @@ python train_net.py -cfg configs/homo/szada_siamese_unet_conc.yaml
 ```bash
 tensorboard --logdir=logs/tensorboard
 ```
-![结果图](.github/images/tensorboard.png)
+<img src=".github/images/tensorboard.png" alt="结果图" style="zoom:50%;" />
 
 
 
@@ -117,6 +118,16 @@ python eval_net.py -cfg configs/homo/szada_siamese_unet_conc.yaml
 （取 F1 最高值的 checkpoint 作为结果，单位：%）
 
 测试结果可以在 `logs/eval.csv`（在配置文件中配置） 中查看
+
+### 结果可视化（部分）
+
+说是部分，当然是选取最好的结果放上来啦~
+
+#### Siamese_unet_conc + Szada
+
+(左边输出结果，右边Ground-Truth)
+
+<img src=".github/images/Pr_0.785_Re_0.727_F1_0.755_PCC_0.961_Kappa_0.734.png" alt="Pr_0.785_Re_0.727_F1_0.755_PCC_0.961_Kappa_0.734" style="zoom: 33%;" /> <img src=".github/images/gt4_test.bmp" alt="gt4_test" style="zoom: 33%;" />
 
 ## TODO
 

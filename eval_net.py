@@ -26,7 +26,11 @@ def run_eval(cfg,save_max_imgs=False):
         test_res.loc[test_res.shape[0]] = save_value
 
     test_res.to_csv(os.path.join(cfg.EVAL.SAVE_PATH,cfg.EVAL.SAVE_NAME),index=False)
-    
+
+    if cfg.EVAL.SAVE_IMAGES:
+        max_checkpoint = test_res.loc[test_res[cfg.EVAL.SAVE_BY_METRIC].idxmax()].to_dict()
+        model = lcwo(max_checkpoint["checkpoint"],model)
+        eval_model(model,test_loader,cfg,save_imgs=True)
     # if save_max_imgs:
     #     max_checkpoint = {}
     #     for key in cfg.EVAL.METRIC:
@@ -48,7 +52,7 @@ def run_eval(cfg,save_max_imgs=False):
                 
     #             save_name = "_".join(["%s_%.3f"%(m,v[m]) for m in ecfg.METRIC])+".png"
     #             plt.imsave(os.path.join(ecfg.SAVE_PATH,save_name),res_image)
-
+    return test_res
 
 def get_cp_paths(cfg):
     cp_root = cfg.EVAL.CHECKPOINTS_PATH
