@@ -78,8 +78,10 @@ python train_net.py -cfg configs/homo/szada_siamese_unet_conc.yaml
 ```bash
 tensorboard --logdir=logs/tensorboard
 ```
-<img src=".github/images/tensorboard.png" alt="结果图" style="zoom:50%;" />
-
+<details>
+<summary>页面截图 (点击展开)</summary>
+  <img src=".github/images/tensorboard.png" alt="结果图" style="zoom:50%;" />
+</details>
 
 
 ### 3. 测试
@@ -128,7 +130,6 @@ python eval_net.py -cfg configs/homo/szada_siamese_unet_conc.yaml
 <details>
 <summary>点击展开</summary>
 (第一个为输出结果，第二个为Ground-Truth)
-
 <img src=".github/images/Pr_0.785_Re_0.727_F1_0.755_PCC_0.961_Kappa_0.734.png" alt="Pr_0.785_Re_0.727_F1_0.755_PCC_0.961_Kappa_0.734" style="zoom: 33%;" /> <img src=".github/images/gt4_test.bmp" alt="gt4_test" style="zoom: 33%;" />
 </details>
 
