@@ -19,6 +19,7 @@
     - [损失函数](#%e6%8d%9f%e5%a4%b1%e5%87%bd%e6%95%b0)
   - [结果](#%e7%bb%93%e6%9e%9c)
     - [结果可视化（部分）](#%e7%bb%93%e6%9e%9c%e5%8f%af%e8%a7%86%e5%8c%96%e9%83%a8%e5%88%86)
+      - [Siamese_unet_conc + Szada](#siameseunetconc--szada)
   - [TODO](#todo)
   - [参考](#%e5%8f%82%e8%80%83)
 
@@ -124,16 +125,18 @@ python eval_net.py -cfg configs/homo/szada_siamese_unet_conc.yaml
 说是部分，当然是选取最好的结果放上来啦~
 
 #### Siamese_unet_conc + Szada
-
-(左边输出结果，右边Ground-Truth)
+<details>
+<summary>点击展开</summary>
+(第一个为输出结果，第二个为Ground-Truth)
 
 <img src=".github/images/Pr_0.785_Re_0.727_F1_0.755_PCC_0.961_Kappa_0.734.png" alt="Pr_0.785_Re_0.727_F1_0.755_PCC_0.961_Kappa_0.734" style="zoom: 33%;" /> <img src=".github/images/gt4_test.bmp" alt="gt4_test" style="zoom: 33%;" />
+</details>
 
 ## TODO
 
 - [ ] 以同样的概率 p 对特征图进行 dropout
 - [ ] 网络中间层可视化
-- [ ] 可视化输出结果
+- [x] 可视化输出结果
 
 ## 参考
 
