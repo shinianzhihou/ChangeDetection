@@ -130,12 +130,13 @@ python eval_net.py -cfg configs/homo/szada_siamese_unet_conc.yaml
 <details>
 <summary>点击展开</summary>
 (第一个为输出结果，第二个为Ground-Truth)
+
 <img src=".github/images/Pr_0.785_Re_0.727_F1_0.755_PCC_0.961_Kappa_0.734.png" alt="Pr_0.785_Re_0.727_F1_0.755_PCC_0.961_Kappa_0.734" style="zoom: 33%;" /> <img src=".github/images/gt4_test.bmp" alt="gt4_test" style="zoom: 33%;" />
 </details>
 
 ## TODO
 
-- [ ] 以同样的概率 p 对特征图进行 dropout
+- [x] 以同样的概率 p 对特征图进行 dropout
 - [ ] 网络中间层可视化
 - [x] 可视化输出结果
 

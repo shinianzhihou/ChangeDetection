@@ -18,8 +18,10 @@ def img_to_dataset(img_path,step,x_range,y_range,size=112,channel=1):
         size(int): size of divided images, default 112  
         channel(int): number of image channels, default 1
     '''
+    suffix = img_path[img_path.find("."):]
     dataset = []
     img_raw = cv2.imread(img_path)[:,:,0:channel]
+    img_path[img_path.find("."):]
     h,w,_ = img_raw.shape
     check = lambda t,t_: False if bisect_right(t_,t+1)==1 or bisect_right(t_,t+size-1)==1 else True
 
@@ -31,8 +33,8 @@ def img_to_dataset(img_path,step,x_range,y_range,size=112,channel=1):
             if x+size>w or y+size>h:
                 continue
             img_divided = img_raw[y:y+size,x:x+size,:]
-            img_d_name = "_x_%d_y_%d.png"%(x,y)
-            img_d_path = img_path.replace(".png",img_d_name)
+            img_d_name = "_x_%d_y_%d%s"%(x,y,suffix)
+            img_d_path = img_path.replace(suffix,img_d_name)
             cv2.imwrite(img_d_path,img_divided)
             dataset.append({
                 "source":img_path,
@@ -44,7 +46,7 @@ def img_to_dataset(img_path,step,x_range,y_range,size=112,channel=1):
             })
     
     # test
-    test_path = img_path.replace(".png","_test.png")
+    test_path = img_path.replace(suffix,"_test"+suffix)
     test_img = img_raw[y_range[0]:y_range[1],x_range[0]:x_range[1],:]
     cv2.imwrite(test_path,test_img)
     dataset.append({
