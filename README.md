@@ -139,7 +139,14 @@ python eval_net.py -cfg configs/homo/szada_siamese_unet_conc.yaml
 - [x] 以同样的概率 p 对特征图进行 dropout
 - [ ] 网络中间层可视化
 - [x] 可视化输出结果
+- [ ] 完成任务后邮件通知
+- [ ] 增加预处理代码 (python and C艹)
+
 
 ## 参考
 
 1. [maskrcnn-benchmark](https://github.com/facebookresearch/maskrcnn-benchmark)
+
+
+
+**欢迎 Star，issue，PR ~**
