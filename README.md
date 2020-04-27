@@ -27,7 +27,7 @@
 
 ### 为什么写这个项目？
 
-变化检测（Change Detection，CD）任务与其他任务，如语义分割，目标检测等相比，有其特有的特性（坑），如数据集少（少到可怜那种，尤其是异源，我**），公开的模型也很少，输入常常是成对的（导致一些在 PyTorch 中常用的函数，如Random系列等需要做出一些改变），给初学者带来了很大的困扰（对，没错就是我），所以我将毕设期间写的一些代码，仿照 [maskrcnn-benchmark](https://github.com/facebookresearch/maskrcnn-benchmark) 整理一下发布出来。
+变化检测（Change Detection，CD）任务与其他任务，如语义分割，目标检测等相比，有其特有的特性（坑），如数据集少（少到可怜那种，尤其是异源，我\*\*），公开的模型也很少，输入常常是成对的（导致一些在 PyTorch 中常用的函数，如Random系列等需要做出一些改变），给初学者带来了很大的困扰（对，没错就是我），所以我将毕设期间写的一些代码，仿照 [maskrcnn-benchmark](https://github.com/facebookresearch/maskrcnn-benchmark) 整理一下发布出来。
 
 ### 特性
 
@@ -139,7 +139,14 @@ python eval_net.py -cfg configs/homo/szada_siamese_unet_conc.yaml
 - [x] 以同样的概率 p 对特征图进行 dropout
 - [x] 网络中间层可视化
 - [x] 可视化输出结果
+- [ ] 完成任务后邮件通知
+- [ ] 增加预处理代码 (python and C艹)
+
 
 ## 参考
 
 1. [maskrcnn-benchmark](https://github.com/facebookresearch/maskrcnn-benchmark)
+
+
+
+**欢迎 Star, issue, PR**
