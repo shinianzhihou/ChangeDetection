@@ -137,7 +137,7 @@ python eval_net.py -cfg configs/homo/szada_siamese_unet_conc.yaml
 ## TODO
 
 - [x] 以同样的概率 p 对特征图进行 dropout
-- [ ] 网络中间层可视化
+- [x] 网络中间层可视化
 - [x] 可视化输出结果
 
 ## 参考
