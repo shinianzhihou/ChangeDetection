@@ -88,15 +88,15 @@ class Siamese_unet_diff(nn.Module):
         x25 = F.max_pool2d(x24, kernel_size=2, stride=2)
         ####################################################
         # fusion(x1,x2,x3) and up
-        x_f4 = x15 - x25
+        x_f4 = torch.abs(x15 - x25)
         x34 = self.upconv4(x_f4)
-        x_f3 = torch.cat([x34, x14-x24], dim=1)
+        x_f3 = torch.cat([x34, torch.abs(x14-x24)], dim=1)
         x33 = self.upconv3(x_f3)
-        x_f2 = torch.cat([x33, x13-x23], dim=1)
+        x_f2 = torch.cat([x33, torch.abs(x13-x23)], dim=1)
         x32 = self.upconv2(x_f2)
-        x_f1 = torch.cat([x32, x12-x22], dim=1)
+        x_f1 = torch.cat([x32, torch.abs(x12-x22)], dim=1)
         x31 = self.upconv1(x_f1)
-        x_fout = torch.cat([x31, x11-x21], dim=1)
+        x_fout = torch.cat([x31, torch.abs(x11-x21)], dim=1)
         output = self.outconv(x_fout)
 
         return output
