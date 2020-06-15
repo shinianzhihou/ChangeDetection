@@ -73,30 +73,30 @@ class Siamese_unet_diff(nn.Module):
 
     def forward(self, x1, x2):
         ####################################################
-        # sar
-        x11 = self.feature_11(x1)
-        x12 = self.feature_12(F.max_pool2d(x11, kernel_size=2, stride=2))
-        x13 = self.feature_13(F.max_pool2d(x12, kernel_size=2, stride=2))
-        x14 = self.feature_14(F.max_pool2d(x13, kernel_size=2, stride=2))
+        # img1
+        x11 = self.feature_1(x1)
+        x12 = self.feature_2(F.max_pool2d(x11, kernel_size=2, stride=2))
+        x13 = self.feature_3(F.max_pool2d(x12, kernel_size=2, stride=2))
+        x14 = self.feature_4(F.max_pool2d(x13, kernel_size=2, stride=2))
         x15 = F.max_pool2d(x14, kernel_size=2, stride=2)
         ####################################################
         # opt
-        x21 = self.feature_21(x2)
-        x22 = self.feature_22(F.max_pool2d(x21, kernel_size=2, stride=2))
-        x23 = self.feature_23(F.max_pool2d(x22, kernel_size=2, stride=2))
-        x24 = self.feature_24(F.max_pool2d(x23, kernel_size=2, stride=2))
+        x21 = self.feature_1(x2)
+        x22 = self.feature_2(F.max_pool2d(x21, kernel_size=2, stride=2))
+        x23 = self.feature_3(F.max_pool2d(x22, kernel_size=2, stride=2))
+        x24 = self.feature_4(F.max_pool2d(x23, kernel_size=2, stride=2))
         x25 = F.max_pool2d(x24, kernel_size=2, stride=2)
         ####################################################
         # fusion(x1,x2,x3) and up
-        x_f4 = x15 - x25
+        x_f4 = torch.abs(x15 - x25)
         x34 = self.upconv4(x_f4)
-        x_f3 = torch.cat([x34, x14-x24], dim=1)
+        x_f3 = torch.cat([x34, torch.abs(x14-x24)], dim=1)
         x33 = self.upconv3(x_f3)
-        x_f2 = torch.cat([x33, x13-x23], dim=1)
+        x_f2 = torch.cat([x33, torch.abs(x13-x23)], dim=1)
         x32 = self.upconv2(x_f2)
-        x_f1 = torch.cat([x32, x12-x22], dim=1)
+        x_f1 = torch.cat([x32, torch.abs(x12-x22)], dim=1)
         x31 = self.upconv1(x_f1)
-        x_fout = torch.cat([x31, x11-x21], dim=1)
+        x_fout = torch.cat([x31, torch.abs(x11-x21)], dim=1)
         output = self.outconv(x_fout)
 
         return output

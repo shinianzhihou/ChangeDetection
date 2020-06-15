@@ -18,13 +18,16 @@
     - [数据集](#%e6%95%b0%e6%8d%ae%e9%9b%86)
     - [损失函数](#%e6%8d%9f%e5%a4%b1%e5%87%bd%e6%95%b0)
   - [结果](#%e7%bb%93%e6%9e%9c)
-    - [参考](#%e5%8f%82%e8%80%83)
+    - [结果可视化（部分）](#%e7%bb%93%e6%9e%9c%e5%8f%af%e8%a7%86%e5%8c%96%e9%83%a8%e5%88%86)
+      - [Siamese_unet_conc + Szada](#siameseunetconc--szada)
+  - [TODO](#todo)
+  - [参考](#%e5%8f%82%e8%80%83)
 
 ## 写在前面
 
 ### 为什么写这个项目？
 
-变化检测（Change Detection，CD）任务与其他任务，如语义分割，目标检测等相比，有其特有的特性（坑），如数据集少（少到可怜那种，尤其是异源，我**），公开的模型也很少，输入常常是成对的（导致一些在 PyTorch 中常用的函数，如Random系列等需要做出一些改变），给初学者带来了很大的困扰（对，没错就是我），所以我将毕设期间写的一些代码，仿照 [maskrcnn-benchmark](https://github.com/facebookresearch/maskrcnn-benchmark) 整理一下发布出来。
+变化检测（Change Detection，CD）任务与其他任务，如语义分割，目标检测等相比，有其特有的特性（坑），如数据集少（少到可怜那种，尤其是异源，我\*\*），公开的模型也很少，输入常常是成对的（导致一些在 PyTorch 中常用的函数，如Random系列等需要做出一些改变），给初学者带来了很大的困扰（对，没错就是我），所以我将毕设期间写的一些代码，仿照 [maskrcnn-benchmark](https://github.com/facebookresearch/maskrcnn-benchmark) 整理一下发布出来。
 
 ### 特性
 
@@ -38,9 +41,10 @@
 
 - **数据增强**
 
-  将数据增强放在了 “dataloader” 部分，在传统 transform 的基础上实现了对 N 个图片同时操作，保证了 Random 系列图片的一致性，默认的数据增强方式如下
-
-![augmentation](.github/images/augmentation.png)
+  将数据增强放在了 “dataloader” 部分，在传统 transform 的基础上实现了对 N 个图片同时操作，保证了 Random 系列图片的一致性，默认的数据增强方式:
+  - 以概率 $p_1$ 随机水平翻转
+  - 以概率 $p_2$ 随机垂直翻转
+  - 以概率 $p_3$ 随机旋转任意角度
 
 ## 开始使用
 
@@ -74,8 +78,10 @@ python train_net.py -cfg configs/homo/szada_siamese_unet_conc.yaml
 ```bash
 tensorboard --logdir=logs/tensorboard
 ```
-![结果图](.github/images/tensorboard.png)
-
+<details>
+<summary>页面截图 (点击展开)</summary>
+  <img src=".github/images/tensorboard.png" alt="结果图" style="zoom:50%;" />
+</details>
 
 
 ### 3. 测试
@@ -110,11 +116,37 @@ python eval_net.py -cfg configs/homo/szada_siamese_unet_conc.yaml
 | Dataset | Method            | PCC  | Re   | F1   | Kappa | checkpoint                                                   |
 | ------- | ----------------- | ---- | ---- | ---- | ----- | ------------------------------------------------------------ |
 | Szada   | Siamese_unet_conc | 96.0 | 50.9 | 54.8 | 52.7  | [OneDrive](https://drive.google.com/open?id=17WsyAgMByZB-Rcl5BZiqhoGAlKjTqz1V) |
+| Szada   | Siamese_unet_diff | 95.8 | 67.0 | 55.4 | 53.2  | [OneDrive](https://drive.google.com/open?id=1compOiumTmHTGYXkmTTKzfpEoPXL_JZj) |
 
-（单位：%）
+（取 F1 最高值的 checkpoint 作为结果，单位：%）
 
 测试结果可以在 `logs/eval.csv`（在配置文件中配置） 中查看
 
-### 参考
+### 结果可视化（部分）
+
+说是部分，当然是选取最好的结果放上来啦~
+
+#### Siamese_unet_conc + Szada
+<details>
+<summary>点击展开</summary>
+(第一个为输出结果，第二个为Ground-Truth)
+
+<img src=".github/images/Pr_0.785_Re_0.727_F1_0.755_PCC_0.961_Kappa_0.734.png" alt="Pr_0.785_Re_0.727_F1_0.755_PCC_0.961_Kappa_0.734" style="zoom: 33%;" /> <img src=".github/images/gt4_test.bmp" alt="gt4_test" style="zoom: 33%;" />
+</details>
+
+## TODO
+
+- [x] 以同样的概率 p 对特征图进行 dropout
+- [x] 网络中间层可视化
+- [x] 可视化输出结果
+- [ ] 完成任务后邮件通知
+- [ ] 增加预处理代码 (python and C艹)
+
+
+## 参考
 
 1. [maskrcnn-benchmark](https://github.com/facebookresearch/maskrcnn-benchmark)
+
+
+
+**欢迎 Star, issue, PR**
