@@ -35,6 +35,16 @@
   - 新加了一些训练脚本，如`tools/train_stb.sh`为训练昇腾杯的启动脚本
 
 
-**欢迎 Star, issue, PR**
+## TODO
+- [ ] 增加使用例子
+- [ ] 增加英文版本
+- [ ] 精简文件夹，如config例子
+- [ ] merge最新版本的mmseg，加入一些新的transformer模型
+- [ ] 数据说明
+- [ ] 把收集到的变化检测资源上传上去
 
-（请PR提交到“developing”分支~）
+
+
+**欢迎 Star, issue, PR**
+变化检测太苦，马上坚持不下去了呜呜呜呜 (;´༎ຶД༎ຶ`)
+（请PR提交到“developing”分支~ ）
