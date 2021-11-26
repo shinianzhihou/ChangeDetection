@@ -1,0 +1,6 @@
+opencv-python-headless
+albumentations
+pandas
+einops
+timm
+
