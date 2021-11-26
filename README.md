@@ -34,5 +34,7 @@
 - tools：一些工具
   - 新加了一些训练脚本，如`tools/train_stb.sh`为训练昇腾杯的启动脚本
 
-- work_dirs：工作区
-  - `work_dirs/logs`为训练时的日志文件
+
+**欢迎 Star, issue, PR**
+
+（请PR提交到“developing”分支~）
