@@ -1,6 +1,6 @@
 ## update 220518
 
-- Coming soon!  A Divided Spatial and Temporal Context Network for Remote Sensing Change Detection.  ([config](#) [log](#)
+- Coming soon!  A Divided Spatial and Temporal Context Network for Remote Sensing Change Detection.  ([config](#)/[log](#))
 
 
 ## update 220401
