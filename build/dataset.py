@@ -2,7 +2,7 @@ import dataset as mydatasets
 
 
 def build_dataset(cfg, choice='', **kwargs):
-    dcfg = cfg.build.dataloader
+    dcfg = cfg.build.dataset
     choice = choice if choice else dcfg.choice
     
     if hasattr(mydatasets,choice):
