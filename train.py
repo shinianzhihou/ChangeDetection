@@ -1,5 +1,4 @@
 import argparse
-import collections
 import random
 
 import torch
@@ -7,12 +6,11 @@ import numpy as np
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 
-from config import cfg
-from utils import OrderedDistributedSampler, Metric, metric
+from utils import OrderedDistributedSampler
 from build import *
 
 
-def train(args):
+def run(args):
 
     rank = args.local_rank
     bs = args.bs
@@ -38,6 +36,7 @@ def train(args):
 
     train_sampler = DistributedSampler(train_set) if rank > -1 else None
     val_sampler = OrderedDistributedSampler(val_set) if rank > -1 else None
+    
     train_loader = DataLoader(dataset=train_set,
                               pin_memory=True,
                               batch_size=bs,
@@ -90,7 +89,7 @@ def train(args):
     return
 
 
-def init_env(args):
+def init(args):
     seed = args.seed
     rank = args.local_rank
 
@@ -129,11 +128,9 @@ def main():
                         default=-1, help='local rank for ddp')
 
     args = parser.parse_args()
-    cfg.merge_from_file(args.cfg)
-    cfg.merge_from_list(args.opts)
-    cfg.freeze()
-    init_env(args)
-    train(args)
+
+    init(args)
+    run(args)
 
 
 if __name__ == '__main__':
