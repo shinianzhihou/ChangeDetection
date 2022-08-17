@@ -1,5 +1,6 @@
 class Metric(object):
     def __init__(self, name='metric'):
+        # TODO(shinian) record the highest scores
         super().__init__()
         self.name = name
         self.global_tp = 0

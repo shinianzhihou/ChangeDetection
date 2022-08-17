@@ -3,9 +3,7 @@ import torchvision.models as tvmodels
 import model as mymodels
 
 
-def build_model(cfg, choice='', **kwargs):
-    mcfg = cfg.build.model
-    choice = choice if choice else mcfg.choice
+def build_model(choice, **kwargs):
     
     if hasattr(mymodels, choice):
         model = getattr(mymodels, choice)(**kwargs)

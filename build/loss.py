@@ -3,9 +3,7 @@ import torch.nn as nn
 import loss as mylosses
 
 
-def build_loss(cfg, choice='', **kwargs):
-    lcfg = cfg.build.loss
-    choice = choice if choice else lcfg.choice
+def build_loss(choice, **kwargs):
     
     if hasattr(mylosses,choice):
         loss = getattr(mylosses, choice)(**kwargs)

@@ -1,4 +1,5 @@
 import argparse
+import collections
 import random
 
 import torch
@@ -7,23 +8,24 @@ from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 
 from config import cfg
-from utils import OrderedDistributedSampler,Metric
+from utils import OrderedDistributedSampler, Metric, metric
 from build import *
 
 
-def train(cfg, args):
+def train(args):
 
     rank = args.local_rank
     bs = args.bs
     nw = args.workers
     lr = args.lr
     epochs = args.epochs
+    pv = args.period_val
 
     device = torch.device(
         f'cuda:{max(rank,0)}' if torch.cuda.is_available() else 'cpu')
 
     # model
-    model = build_model(cfg, choice='')
+    model = build_model(choice='BiT')
     # TODO(shinian) load checkpoint
     # TODO(shinian) ema model
     if rank > -1:
@@ -31,8 +33,9 @@ def train(cfg, args):
                                                           output_device=rank, find_unused_parameters=False)
 
     # dataloader
-    train_set = build_dataset(cfg, choice='')
-    val_set = build_dataset(cfg, choice='')
+    train_set = build_dataset(choice='LEVIRCD', metafile="")
+    val_set = build_dataset(choice='LEVIRCD', metafile="")
+
     train_sampler = DistributedSampler(train_set) if rank > -1 else None
     val_sampler = OrderedDistributedSampler(val_set) if rank > -1 else None
     train_loader = DataLoader(dataset=train_set,
@@ -51,37 +54,52 @@ def train(cfg, args):
                             sampler=val_sampler)
 
     # loss
-    loss = build_loss(cfg, choice='')
+    criterion = build_loss(choice='BCEWithLogitsLoss')
 
     # optim
-    optimizer = build_optimizer(cfg, model, choice='Adam', lr=lr)
+    optimizer = build_optimizer(model, choice='Adam', lr=lr)
 
     # lr_scheduler
-    lr_scheduler = build_scheduler(cfg, optimizer, choice='')
+    lr_scheduler = build_scheduler(optimizer, choice='MultiStepLR',
+                                   milestones=[int(epochs*0.6), int(epochs*0.85)], gamma=0.1)
 
     # training
-
     for epoch in range(epochs):
         if rank > -1:
             train_sampler.set_epoch(epoch)
 
         model.train()
         for batch, data in enumerate(train_loader):
-            # TODO(shinian) complete
+            img1 = data[0].to(device)
+            img2 = data[1].to(device)
+            label = data[2].to(device)
 
+            optimizer.zero_grad()
+            output = model(img1, img2)
+            loss = criterion(output, label)
+            loss.backward()
+            optimizer.step()
 
+            # FIXME(shinian) replace it with log
+            print(f"{epoch}/{epochs}|{batch}/{len(train_loader)}|{loss.item()}")
+
+        lr_scheduler.step()
+
+        # TODO(shinian) perform validation
 
     return
 
 
-def init_env(cfg, args):
+def init_env(args):
+    seed = args.seed
+    rank = args.local_rank
 
-    random.seed(1234)
-    np.random.seed(1234)
-    torch.manual_seed(1234)
-    torch.cuda.manual_seed_all(1234)
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
 
-    torch.cuda.set_device(args.local_rank)
+    torch.cuda.set_device(rank)
     torch.distributed.init_process_group(
         backend='nccl',
         init_method='env://',)
@@ -94,8 +112,6 @@ def main():
     parser = argparse.ArgumentParser(
         description='train')
 
-    parser.add_argument('-cfg',  type=str, default='configs/default.yaml',
-                        metavar='FILE', help='path to config file')
     parser.add_argument('-seed',  type=int, default=1234,
                         help='global random seed')
     parser.add_argument('-bs',  type=int, default=16,
@@ -106,19 +122,18 @@ def main():
                         help='number of workers for each gpu')
     parser.add_argument('-ne', '--epochs',  type=int, default=30,
                         help='number of epochs')
+    parser.add_argument('-pv', '--period_val',  type=int, default=1,
+                        help='perform validation every period')
 
     parser.add_argument('--local_rank', type=int,
                         default=-1, help='local rank for ddp')
-
-    parser.add_argument('opts', default=None, nargs=argparse.REMAINDER,
-                        help='modify config options using the command-line')
 
     args = parser.parse_args()
     cfg.merge_from_file(args.cfg)
     cfg.merge_from_list(args.opts)
     cfg.freeze()
-    init_env(cfg, args)
-    train(cfg, args)
+    init_env(args)
+    train(args)
 
 
 if __name__ == '__main__':
