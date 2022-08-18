@@ -1,6 +1,7 @@
 import os
 
 import cv2
+import torchvision
 from torch.utils.data import Dataset
 
 
@@ -37,6 +38,7 @@ class CommonDataset(Dataset):
         self.sep = sep
         self.c255t1_in_mask = c255t1_in_mask
         self.data = self.get_data()
+        self.tensor = torchvision.transforms.ToTensor()
 
     def get_data(self):
         data = []
@@ -63,14 +65,21 @@ class CommonDataset(Dataset):
         return mask
 
     def process(self, image0, image1, mask=None):
+        # import pdb; pdb.set_trace()
+        if self.pipeline == None:
+            return image0, image1, mask
+
         augmented = self.pipeline(image=image0, image1=image1, mask=mask)
+        image0 = self.tensor(augmented['image'])
+        image1 = self.tensor(augmented['image1'])
         if self.test_mode:
-            return augmented['image'], augmented['image1']
+            return image0, image1
         else:
-            return augmented['image'], augmented['image1'], augmented['mask']
+            mask = self.tensor(augmented['mask'])[0]
+            return image0, image0, mask
 
     def __getitem__(self, idx):
-        items = self.data[idx].strip().split(self.sep)
+        items = self.data[idx]
         image0, image1 = self.read_images(items[:2])
         mask = None if self.test_mode else self.read_mask(items[2])
         return self.process(image0, image1, mask)

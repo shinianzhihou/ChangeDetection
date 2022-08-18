@@ -125,7 +125,7 @@ class SiameseUnetConc(nn.Module):
         x_fout = torch.cat([x31, x11, x21], dim=1)
         output = self.outconv(x_fout)
 
-        return
+        return output
 
 
 if __name__ == "__main__":
