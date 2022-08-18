@@ -24,7 +24,13 @@ def run(args):
         f'cuda:{max(rank,0)}' if torch.cuda.is_available() else 'cpu')
 
     # model
-    model = build_model(choice='SiameseUnetConc')
+    model = build_model(choice='cdp_Unet', encoder_name="resnet34",
+                        encoder_weights="imagenet",
+                        in_channels=3,
+                        classes=2,
+                        siam_encoder=True,
+                        fusion_form='concat',)
+
     # TODO(shinian) load checkpoint
     # TODO(shinian) ema model
     if rank > -1:
@@ -36,10 +42,11 @@ def run(args):
         A.RandomCrop(width=256, height=256),
         A.HorizontalFlip(p=0.5),
         A.VerticalFlip(p=0.5),
-        A.RandomBrightnessContrast(p=0.2),],
+        A.RandomBrightnessContrast(p=0.2), ],
         additional_targets={'image1': 'image'}
     )
     val_pipeline = None
+    
     # dataloader
     train_set = build_dataset(choice='CommonDataset',
                               metafile="/Users/shinian/proj/data/stb/train.txt",

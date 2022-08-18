@@ -1,2 +1,3 @@
 thop
 albumentations
+change_detection_pytorch
