@@ -7,7 +7,7 @@ import albumentations as A
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 
-from utils import OrderedDistributedSampler
+from utils import OrderedDistributedSampler, Metric
 from build import *
 
 
@@ -19,6 +19,7 @@ def run(args):
     lr = args.lr
     epochs = args.epochs
     pv = args.period_val
+    pp = args.period_print
 
     device = torch.device(
         f'cuda:{max(rank,0)}' if torch.cuda.is_available() else 'cpu')
@@ -30,6 +31,7 @@ def run(args):
                         classes=2,
                         siam_encoder=True,
                         fusion_form='concat',)
+    model = model.to(device)
 
     # TODO(shinian) load checkpoint
     # TODO(shinian) ema model
@@ -46,7 +48,7 @@ def run(args):
         additional_targets={'image1': 'image'}
     )
     val_pipeline = None
-    
+
     # dataloader
     train_set = build_dataset(choice='CommonDataset',
                               metafile="/Users/shinian/proj/data/stb/train.txt",
@@ -60,7 +62,6 @@ def run(args):
                             pipeline=val_pipeline,)
 
     train_sampler = DistributedSampler(train_set) if rank > -1 else None
-    val_sampler = OrderedDistributedSampler(val_set) if rank > -1 else None
 
     train_loader = DataLoader(dataset=train_set,
                               pin_memory=True,
@@ -69,13 +70,14 @@ def run(args):
                               shuffle=False,
                               drop_last=True,
                               sampler=train_sampler)
+
     val_loader = DataLoader(dataset=val_set,
                             pin_memory=True,
                             batch_size=bs,
                             num_workers=nw,
                             shuffle=False,
                             drop_last=False,
-                            sampler=val_sampler)
+                            sampler=None)
 
     # loss
     criterion = build_loss(choice='CrossEntropyLoss')
@@ -87,10 +89,17 @@ def run(args):
     lr_scheduler = build_scheduler(optimizer, choice='MultiStepLR',
                                    milestones=[int(epochs*0.6), int(epochs*0.85)], gamma=0.1)
 
+    # metric
+    metric_train = Metric(init_metric={'f1': 0.0, 'iou': 0.0})
+    metric_val = Metric(init_metric={'f1': 0.0, 'iou': 0.0})
+
     # training
     for epoch in range(epochs):
+
         if rank > -1:
             train_sampler.set_epoch(epoch)
+
+        metric_train.reset()
 
         model.train()
         for batch, data in enumerate(train_loader):
@@ -99,15 +108,21 @@ def run(args):
             label = data[2].to(device)
 
             optimizer.zero_grad()
-            output = model(img1, img2)
-            loss = criterion(output, label)
+            pred = model(img1, img2)
+            loss = criterion(pred, label)
             loss.backward()
             optimizer.step()
 
-            # FIXME(shinian) replace it with log
-            print(f"{epoch}/{epochs}|{batch}/{len(train_loader)}|{loss.item()}")
+            output = pred.argmax(dim=1)
+            metric_train(output, label)
+
+            # FIXME(shinian) gather output/loss/metric on different ranks in DDP
+            if batch > 0 and batch % pp == 0 and rank < 1:
+                print(f"e:{epoch:2d}/{epochs:2d} | b:{batch:3d}/{len(train_loader)} | " +
+                      f"loss:{loss.item():.3e} | {str(metric_train)}")
 
         lr_scheduler.step()
+        metric_train.calculate(local=False)
 
         # TODO(shinian) perform validation
 
@@ -152,6 +167,8 @@ def main():
                         help='number of epochs')
     parser.add_argument('-pv', '--period_val',  type=int, default=1,
                         help='perform validation every period')
+    parser.add_argument('-pp', '--period_print',  type=int, default=10,
+                        help='print log every period (batch)')
 
     parser.add_argument('--local_rank', type=int,
                         default=-1, help='local rank for ddp')
