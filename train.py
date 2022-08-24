@@ -7,7 +7,7 @@ import albumentations as A
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 
-from utils import OrderedDistributedSampler, Metric
+from utils import Metric
 from build import *
 
 
