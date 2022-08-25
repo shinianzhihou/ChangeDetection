@@ -76,7 +76,7 @@ class CommonDataset(Dataset):
             return image0, image1
         else:
             mask = self.tensor(augmented['mask'])[0]
-            return image0, image0, mask
+            return image0, image1, mask
 
     def __getitem__(self, idx):
         items = self.data[idx]
