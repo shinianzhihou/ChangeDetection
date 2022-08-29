@@ -1,14 +1,16 @@
 import argparse
+import os
 import random
 
-import torch
-import numpy as np
 import albumentations as A
+import numpy as np
+import torch
+from loguru import logger
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 
-from utils import Metric
 from build import *
+from utils import Metric
 
 
 def run(args):
@@ -17,16 +19,19 @@ def run(args):
     bs = args.bs
     nw = args.workers
     lr = args.lr
-    epochs = args.epochs
     pv = args.period_val
     pp = args.period_print
+    epochs = args.epochs
+    work_dir = args.work_dir
+
+    os.system(f"mkdir -p {work_dir}")
 
     device = torch.device(
         f'cuda:{max(rank,0)}' if torch.cuda.is_available() else 'cpu')
 
     # model
-    model = build_model(choice='cdp_Unet', encoder_name="resnet34",
-                        encoder_weights="imagenet",
+    model = build_model(choice='cdp_UnetPlusPlus', encoder_name="timm-efficientnet-b2",
+                        encoder_weights="noisy-student",
                         in_channels=3,
                         classes=2,
                         siam_encoder=True,
@@ -37,28 +42,34 @@ def run(args):
     # TODO(shinian) ema model
     if rank > -1:
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[rank],
-                                                          output_device=rank, find_unused_parameters=False)
+                                                          output_device=rank, find_unused_parameters=True)
+
+    if rank < 1:
+        logger.add(os.path.join(work_dir,"train.log"),serialize=True)
+        logger.info(args)
+
+        logger.info(model)
 
     # pipeline
     train_pipeline = A.Compose([
-        A.RandomCrop(width=256, height=256),
+        A.RandomResizedCrop(width=384, height=384),
         A.HorizontalFlip(p=0.5),
-        A.VerticalFlip(p=0.5),
-        A.RandomBrightnessContrast(p=0.2), ],
-        additional_targets={'image1': 'image'}
-    )
-    val_pipeline = None
+        A.VerticalFlip(p=0.5),],
+        additional_targets={'image1': 'image'})
+    val_pipeline = A.Compose([
+        A.HorizontalFlip(p=0.0),],
+        additional_targets={'image1': 'image'})
 
     # dataloader
     train_set = build_dataset(choice='CommonDataset',
-                              metafile="/Users/shinian/proj/data/stb/train.txt",
-                              data_root="/Users/shinian/proj/data/stb/",
+                              metafile="/path/to/train.txt",
+                              data_root="/data_root/",
                               pipeline=train_pipeline,
 
                               )
     val_set = build_dataset(choice='CommonDataset',
-                            metafile="/Users/shinian/proj/data/stb/val.txt",
-                            data_root="/Users/shinian/proj/data/stb/",
+                            metafile="/path/to/val.txt",
+                            data_root="/data_root/",
                             pipeline=val_pipeline,)
 
     train_sampler = DistributedSampler(train_set) if rank > -1 else None
@@ -81,13 +92,17 @@ def run(args):
 
     # loss
     criterion = build_loss(choice='CrossEntropyLoss')
+    # criterion = build_loss(choice='BCEWithLogitsLoss')
 
     # optim
-    optimizer = build_optimizer(model, choice='Adam', lr=lr, weight_decay=0.0)
+    optimizer = build_optimizer(
+        model, choice='Adam', lr=lr, weight_decay=0)
 
     # lr_scheduler
-    lr_scheduler = build_scheduler(optimizer, choice='MultiStepLR',
-                                   milestones=[int(epochs*0.6), int(epochs*0.85)], gamma=0.1)
+    # lr_scheduler = build_scheduler(optimizer, choice='MultiStepLR',
+    #                                milestones=[int(epochs*0.6), int(epochs*0.85)], gamma=0.1)
+    lr_scheduler = build_scheduler(optimizer, choice='CosineAnnealingLR',
+                                   T_max=epochs+1, eta_min=1e-5)
 
     # metric
     metric_train = Metric(init_metric={'f1': 0.0, 'iou': 0.0})
@@ -100,7 +115,6 @@ def run(args):
             train_sampler.set_epoch(epoch)
 
         metric_train.reset()
-
         model.train()
         for batch, data in enumerate(train_loader):
             img1 = data[0].to(device)
@@ -117,16 +131,54 @@ def run(args):
             metric_train(output, label)
 
             # FIXME(shinian) gather output/loss/metric on different ranks in DDP
-            if batch > 0 and batch % pp == 0 and rank < 1:
-                print(f"e:{epoch:2d}/{epochs:2d} | b:{batch:3d}/{len(train_loader)} | " +
-                      f"loss:{loss.item():.3e} | {str(metric_train)}")
+            if ((batch+1) % pp == 0 or (batch+1) == len(train_loader)) and rank < 1:
+                local = batch != len(train_loader)-1
+                state = "T" if local else "E"
+                pstr = f"[{state}] e:{epoch+1:2d}/{epochs:2d} | b:{batch+1:3d}/{len(train_loader)} | " + \
+                       f"lr: {lr_scheduler.get_last_lr()[0]:.3e} | " + \
+                       f"{metric_train.print(local)} | " + \
+                       f"loss:{loss.item():.3e}"
+                # print(pstr)
+                logger.info(pstr)
 
         lr_scheduler.step()
         metric_train.calculate(local=False)
 
         # TODO(shinian) perform validation
 
+        if ((epoch+1) % pv == 0 or (epoch+1) == epochs) and rank < 1:
+            res, loss = validate(
+                model, val_loader, criterion, metric_val, device)
+            pstr =  f"[V] e:{epoch+1:2d}/{epochs:2d} | b:{len(val_loader):3d}/{len(val_loader)} | " + \
+                    f"lr: {lr_scheduler.get_last_lr()[0]:.3e} | " + \
+                    f"{metric_val.print(local)} | " + \
+                    f"loss:{loss.item():.3e}"
+            # print(pstr)
+            logger.info(pstr)
+            
+            save_name = f"epoch_{epoch+1}_{metric_val.print(local,sep0='_',sep1='_')}.pth"
+            save_path = os.path.join(work_dir, save_name)
+            torch.save(model.state_dict(), save_path)
+            
     return
+
+
+@torch.no_grad()
+def validate(model, val_loader, criterion, metric_val, device):
+
+    model.eval()
+    loss_all = 0.0
+    for batch, data in enumerate(val_loader):
+        img1 = data[0].to(device)
+        img2 = data[1].to(device)
+        label = data[2].to(device)
+        pred = model(img1, img2)
+        loss_all += criterion(pred, label)
+        output = pred.argmax(dim=1)
+        metric_val(output, label)
+    loss = loss_all / len(val_loader)
+    res = metric_val.calculate(local=False)
+    return res, loss
 
 
 def init(args):
@@ -169,6 +221,8 @@ def main():
                         help='perform validation every period')
     parser.add_argument('-pp', '--period_print',  type=int, default=10,
                         help='print log every period (batch)')
+    parser.add_argument('-wd', '--work_dir',  type=str, default='../work_dirs/',
+                        help='work dirs to save logs and ckpts')
 
     parser.add_argument('--local_rank', type=int,
                         default=-1, help='local rank for ddp')
