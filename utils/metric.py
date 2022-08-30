@@ -23,6 +23,10 @@ class Metric(object):
         self.global_fn = 0
         self.best_metric = copy.deepcopy(self.init_metric)
 
+    def print(self, local=True, sep0=" | ", sep1=":"):
+        return sep0.join([f"{k:3s}{sep1}{v:.3f}" for k, v in
+                           self.calculate(local=local).items()])
+
     def __str__(self):
         return " | ".join([f"{k:3s}:{v:.3f}" for k, v in
                            self.calculate(local=True).items()])

@@ -75,7 +75,7 @@ class CommonDataset(Dataset):
         if self.test_mode:
             return image0, image1
         else:
-            mask = self.tensor(augmented['mask'])[0]
+            mask = self.tensor(augmented['mask'])[0].long()
             return image0, image1, mask
 
     def __getitem__(self, idx):

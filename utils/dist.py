@@ -1,5 +1,5 @@
 """
-@https://github.com/rwightman/pytorch-image-models/timm/data/distributed_sampler.py#L1
+@https://github.com/rwightman/pytorch-image-models/blob/master/timm/data/distributed_sampler.py#L1
 """
 
 import math

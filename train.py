@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 
 from build import *
-from utils import Metric
+from utils import Metric, ModelEma
 
 
 def run(args):
@@ -23,6 +23,8 @@ def run(args):
     pp = args.period_print
     epochs = args.epochs
     work_dir = args.work_dir
+    ema = args.ema
+    decay_ema = args.decay_ema
 
     os.system(f"mkdir -p {work_dir}")
 
@@ -30,7 +32,7 @@ def run(args):
         f'cuda:{max(rank,0)}' if torch.cuda.is_available() else 'cpu')
 
     # model
-    model = build_model(choice='cdp_UnetPlusPlus', encoder_name="timm-efficientnet-b2",
+    model = build_model(choice='cdp_UnetPlusPlus', encoder_name="timm-efficientnet-b0",
                         encoder_weights="noisy-student",
                         in_channels=3,
                         classes=2,
@@ -38,8 +40,15 @@ def run(args):
                         fusion_form='concat',)
     model = model.to(device)
 
+
+
     # TODO(shinian) load checkpoint
     # TODO(shinian) ema model
+
+    if ema:
+        model_ema = ModelEma(model, decay=decay_ema)
+    
+
     if rank > -1:
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[rank],
                                                           output_device=rank, find_unused_parameters=True)
@@ -47,7 +56,6 @@ def run(args):
     if rank < 1:
         logger.add(os.path.join(work_dir,"train.log"),serialize=True)
         logger.info(args)
-
         logger.info(model)
 
     # pipeline
@@ -62,14 +70,14 @@ def run(args):
 
     # dataloader
     train_set = build_dataset(choice='CommonDataset',
-                              metafile="/path/to/train.txt",
-                              data_root="/data_root/",
+                              metafile="/Users/shinian/proj/data/stb/train.debug.txt",
+                              data_root="/Users/shinian/proj/data/stb/",
                               pipeline=train_pipeline,
 
                               )
     val_set = build_dataset(choice='CommonDataset',
-                            metafile="/path/to/val.txt",
-                            data_root="/data_root/",
+                            metafile="/Users/shinian/proj/data/stb/val.debug.txt",
+                            data_root="/Users/shinian/proj/data/stb/",
                             pipeline=val_pipeline,)
 
     train_sampler = DistributedSampler(train_set) if rank > -1 else None
@@ -92,7 +100,6 @@ def run(args):
 
     # loss
     criterion = build_loss(choice='CrossEntropyLoss')
-    # criterion = build_loss(choice='BCEWithLogitsLoss')
 
     # optim
     optimizer = build_optimizer(
@@ -107,6 +114,8 @@ def run(args):
     # metric
     metric_train = Metric(init_metric={'f1': 0.0, 'iou': 0.0})
     metric_val = Metric(init_metric={'f1': 0.0, 'iou': 0.0})
+    if ema:
+        metric_val_ema = Metric(init_metric={'f1': 0.0, 'iou': 0.0})
 
     # training
     for epoch in range(epochs):
@@ -126,6 +135,8 @@ def run(args):
             loss = criterion(pred, label)
             loss.backward()
             optimizer.step()
+            if ema:
+                model_ema.update(model)
 
             output = pred.argmax(dim=1)
             metric_train(output, label)
@@ -147,18 +158,32 @@ def run(args):
         # TODO(shinian) perform validation
 
         if ((epoch+1) % pv == 0 or (epoch+1) == epochs) and rank < 1:
+            save_dict = {}
+            local = False
             res, loss = validate(
                 model, val_loader, criterion, metric_val, device)
             pstr =  f"[V] e:{epoch+1:2d}/{epochs:2d} | b:{len(val_loader):3d}/{len(val_loader)} | " + \
                     f"lr: {lr_scheduler.get_last_lr()[0]:.3e} | " + \
                     f"{metric_val.print(local)} | " + \
                     f"loss:{loss.item():.3e}"
-            # print(pstr)
             logger.info(pstr)
+            save_dict['state_dict'] = (model.module if hasattr(model, 'module') else model).state_dict()
+            save_name = f"epoch_{epoch+1}_{metric_val.print(local,sep0='_',sep1='_')}"
             
-            save_name = f"epoch_{epoch+1}_{metric_val.print(local,sep0='_',sep1='_')}.pth"
+            if ema:
+                res, loss = validate(
+                model_ema.module, val_loader, criterion, metric_val_ema, device)
+                pstr =  f"[A] e:{epoch+1:2d}/{epochs:2d} | b:{len(val_loader):3d}/{len(val_loader)} | " + \
+                        f"lr: {lr_scheduler.get_last_lr()[0]:.3e} | " + \
+                        f"{metric_val_ema.print(local)} | " + \
+                        f"loss:{loss.item():.3e}"
+                logger.info(pstr)
+                save_dict['state_dict_ema'] = (model_ema.module if hasattr(model_ema, 'module') else model_ema).state_dict()
+                save_name += f"_{metric_val.print(local,sep0='_',sep1='_')}"
+
+            save_name += ".pth"
             save_path = os.path.join(work_dir, save_name)
-            torch.save(model.state_dict(), save_path)
+            torch.save(save_dict, save_path)
             
     return
 
@@ -223,7 +248,10 @@ def main():
                         help='print log every period (batch)')
     parser.add_argument('-wd', '--work_dir',  type=str, default='../work_dirs/',
                         help='work dirs to save logs and ckpts')
-
+    parser.add_argument('--ema', action='store_true', default=False,
+                        help='use exponential moving average while training')
+    parser.add_argument('-de','--decay_ema', type=float, default=0.9998,
+                        help='decay factor for ema')
     parser.add_argument('--local_rank', type=int,
                         default=-1, help='local rank for ddp')
 
