@@ -25,6 +25,8 @@ def run(args):
     work_dir = args.work_dir
     ema = args.ema
     decay_ema = args.decay_ema
+    decoder_attention_type = args.decoder_attention_type
+    f1_thr = args.f1_thr
 
     os.system(f"mkdir -p {work_dir}")
 
@@ -32,8 +34,9 @@ def run(args):
         f'cuda:{max(rank,0)}' if torch.cuda.is_available() else 'cpu')
 
     # model
-    model = build_model(choice='cdp_UnetPlusPlus', encoder_name="timm-efficientnet-b0",
+    model = build_model(choice='cdp_UnetPlusPlus', encoder_name="timm-efficientnet-b2",
                         encoder_weights="noisy-student",
+                        decoder_attention_type=decoder_attention_type,
                         in_channels=3,
                         classes=2,
                         siam_encoder=True,
@@ -41,20 +44,18 @@ def run(args):
     model = model.to(device)
 
 
-
     # TODO(shinian) load checkpoint
-    # TODO(shinian) ema model
-
     if ema:
         model_ema = ModelEma(model, decay=decay_ema)
-    
 
     if rank > -1:
+        model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[rank],
                                                           output_device=rank, find_unused_parameters=True)
-
     if rank < 1:
-        logger.add(os.path.join(work_dir,"train.log"),serialize=True)
+        log_format = "<green>{time:MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
+        logger.add(os.path.join(
+            work_dir, "train_{time:MM_DD_HH_mm_ss}.log"), format=log_format, serialize=False)
         logger.info(args)
         logger.info(model)
 
@@ -62,22 +63,22 @@ def run(args):
     train_pipeline = A.Compose([
         A.RandomResizedCrop(width=384, height=384),
         A.HorizontalFlip(p=0.5),
-        A.VerticalFlip(p=0.5),],
+        A.VerticalFlip(p=0.5), ],
         additional_targets={'image1': 'image'})
     val_pipeline = A.Compose([
-        A.HorizontalFlip(p=0.0),],
+        A.HorizontalFlip(p=0.0), ],
         additional_targets={'image1': 'image'})
 
     # dataloader
     train_set = build_dataset(choice='CommonDataset',
-                              metafile="/Users/shinian/proj/data/stb/train.debug.txt",
-                              data_root="/Users/shinian/proj/data/stb/",
+                              metafile="train.txt",
+                              data_root="data/cd/stb/",
                               pipeline=train_pipeline,
-
                               )
+
     val_set = build_dataset(choice='CommonDataset',
-                            metafile="/Users/shinian/proj/data/stb/val.debug.txt",
-                            data_root="/Users/shinian/proj/data/stb/",
+                            metafile="val.txt",
+                            data_root="data/cd/stb/",
                             pipeline=val_pipeline,)
 
     train_sampler = DistributedSampler(train_set) if rank > -1 else None
@@ -100,16 +101,17 @@ def run(args):
 
     # loss
     criterion = build_loss(choice='CrossEntropyLoss')
+    # criterion = build_loss(choice='BCEWithLogitsLoss')
 
     # optim
     optimizer = build_optimizer(
         model, choice='Adam', lr=lr, weight_decay=0)
 
     # lr_scheduler
-    # lr_scheduler = build_scheduler(optimizer, choice='MultiStepLR',
-    #                                milestones=[int(epochs*0.6), int(epochs*0.85)], gamma=0.1)
-    lr_scheduler = build_scheduler(optimizer, choice='CosineAnnealingLR',
-                                   T_max=epochs+1, eta_min=1e-5)
+    lr_scheduler = build_scheduler(optimizer, choice='MultiStepLR',
+                                   milestones=[int(epochs*0.6), int(epochs*0.85)], gamma=0.1)
+    # lr_scheduler = build_scheduler(optimizer, choice='CosineAnnealingLR',
+    #                                T_max=epochs+1, eta_min=0)
 
     # metric
     metric_train = Metric(init_metric={'f1': 0.0, 'iou': 0.0})
@@ -125,6 +127,12 @@ def run(args):
 
         metric_train.reset()
         model.train()
+
+        if rank < 1 and (metric_val.best_metric['f1'] >= f1_thr or epoch >= int(epochs*0.85)) and model_ema.count_set < 1:
+            model_ema.set(model)
+            logger.info(
+                f'set the model_ema when {metric_val.print(local=False)}')
+
         for batch, data in enumerate(train_loader):
             img1 = data[0].to(device)
             img2 = data[1].to(device)
@@ -152,39 +160,44 @@ def run(args):
                 # print(pstr)
                 logger.info(pstr)
 
-        lr_scheduler.step()
-        metric_train.calculate(local=False)
-
-        # TODO(shinian) perform validation
-
+        # validation
         if ((epoch+1) % pv == 0 or (epoch+1) == epochs) and rank < 1:
             save_dict = {}
             local = False
+            metric_val.reset()
             res, loss = validate(
                 model, val_loader, criterion, metric_val, device)
-            pstr =  f"[V] e:{epoch+1:2d}/{epochs:2d} | b:{len(val_loader):3d}/{len(val_loader)} | " + \
-                    f"lr: {lr_scheduler.get_last_lr()[0]:.3e} | " + \
-                    f"{metric_val.print(local)} | " + \
-                    f"loss:{loss.item():.3e}"
+            pstr = f"[V] e:{epoch+1:2d}/{epochs:2d} | b:{len(val_loader):3d}/{len(val_loader)} | " + \
+                f"lr: {lr_scheduler.get_last_lr()[0]:.3e} | " + \
+                f"{metric_val.print(local)} | " + \
+                f"loss:{loss.item():.3e}"
             logger.info(pstr)
-            save_dict['state_dict'] = (model.module if hasattr(model, 'module') else model).state_dict()
+            save_dict['state_dict'] = (model.module if hasattr(
+                model, 'module') else model).state_dict()
             save_name = f"epoch_{epoch+1}_{metric_val.print(local,sep0='_',sep1='_')}"
-            
+
             if ema:
+                metric_val_ema.reset()
                 res, loss = validate(
-                model_ema.module, val_loader, criterion, metric_val_ema, device)
-                pstr =  f"[A] e:{epoch+1:2d}/{epochs:2d} | b:{len(val_loader):3d}/{len(val_loader)} | " + \
-                        f"lr: {lr_scheduler.get_last_lr()[0]:.3e} | " + \
-                        f"{metric_val_ema.print(local)} | " + \
-                        f"loss:{loss.item():.3e}"
+                    model_ema.module, val_loader, criterion, metric_val_ema, device)
+                pstr = f"[A] e:{epoch+1:2d}/{epochs:2d} | b:{len(val_loader):3d}/{len(val_loader)} | " + \
+                    f"lr: {lr_scheduler.get_last_lr()[0]:.3e} | " + \
+                    f"{metric_val_ema.print(local)} | " + \
+                    f"loss:{loss.item():.3e}"
                 logger.info(pstr)
-                save_dict['state_dict_ema'] = (model_ema.module if hasattr(model_ema, 'module') else model_ema).state_dict()
-                save_name += f"_{metric_val.print(local,sep0='_',sep1='_')}"
+                save_dict['state_dict_ema'] = (model_ema.module if hasattr(
+                    model_ema, 'module') else model_ema).state_dict()
+                save_name += f"_{metric_val_ema.print(local,sep0='_',sep1='_')}"
 
             save_name += ".pth"
             save_path = os.path.join(work_dir, save_name)
-            torch.save(save_dict, save_path)
-            
+            if metric_val.best_metric['f1'] >= f1_thr or metric_val_ema.best_metric['f1'] >= f1_thr:
+                torch.save(save_dict, save_path)
+
+        # after training
+        lr_scheduler.step()
+        metric_train.calculate(local=False)
+
     return
 
 
@@ -250,8 +263,12 @@ def main():
                         help='work dirs to save logs and ckpts')
     parser.add_argument('--ema', action='store_true', default=False,
                         help='use exponential moving average while training')
-    parser.add_argument('-de','--decay_ema', type=float, default=0.9998,
+    parser.add_argument('-de', '--decay_ema', type=float, default=0.9998,
                         help='decay factor for ema')
+    parser.add_argument('-dat', '--decoder_attention_type', type=str, default=None,
+                        help='decoder attention type')
+    parser.add_argument('-ft', '--f1_thr',  type=float, default=0.68,
+                        help='f1_thr used in ema and checkpoint')
     parser.add_argument('--local_rank', type=int,
                         default=-1, help='local rank for ddp')
 
