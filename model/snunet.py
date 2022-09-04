@@ -4,7 +4,6 @@
 2022.09.03
 """
 
-from unicodedata import name
 import torch.nn as nn
 import torch
 
@@ -152,7 +151,7 @@ class SNUNetECAM(nn.Module):
         out = self.ca(out) * (out + ca1.repeat(1, 4, 1, 1))
         out = self.conv_final(out)
 
-        return (out, )
+        return out
 
 
 class Siam_NestedUNet_Conc(nn.Module):
@@ -246,7 +245,7 @@ class Siam_NestedUNet_Conc(nn.Module):
         return (output1, output2, output3, output4, output)
 
 
-def snunet():
+def snunet(**kwargs):
     net = SNUNetECAM(name='snunet')
     return net
 

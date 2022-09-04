@@ -945,26 +945,26 @@ class BASE_Transformer(BaseResNet):
         return x
 
 
-def base_resnet18():
+def base_resnet18(**kwargs):
     net = BaseResNet(input_nc=3, output_nc=2,
                      output_sigmoid=False, name='base_resnet18')
     return net
 
 
-def base_transformer_pos_s4():
+def base_transformer_pos_s4(**kwargs):
     net = BASE_Transformer(input_nc=3, output_nc=2, token_len=4, resnet_stages_num=4,
                            with_pos='learned', name='base_transformer_pos_s4')
     return net
 
 
-def base_transformer_pos_s4_dd8():
+def base_transformer_pos_s4_dd8(**kwargs):
     net = BASE_Transformer(input_nc=3, output_nc=2, token_len=4, resnet_stages_num=4,
                            with_pos='learned', enc_depth=1, dec_depth=8, 
                            name='base_transformer_pos_s4_dd8')
     return net
 
 
-def base_transformer_pos_s4_dd8_dedim8():
+def base_transformer_pos_s4_dd8_dedim8(**kwargs):
     net = BASE_Transformer(input_nc=3, output_nc=2, token_len=4, resnet_stages_num=4,
                            with_pos='learned', enc_depth=1, dec_depth=8, decoder_dim_head=8,
                            name='base_transformer_pos_s4_dd8_dedim8')

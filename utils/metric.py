@@ -15,16 +15,24 @@ class Metric(object):
         self.local_fn = 0
 
         self.reset()
+        self.reset_best()
 
     def reset(self):
         self.global_tp = 0
         self.global_fp = 0
         self.global_tn = 0
         self.global_fn = 0
+    
+    def reset_best(self):
         self.best_metric = copy.deepcopy(self.init_metric)
 
-    def print(self, local=True, sep0=" | ", sep1=":"):
-        return sep0.join([f"{k:3s}{sep1}{v:.3f}" for k, v in
+    def print(self, local=True, sep0=" | ", sep1=":", with_best=False):
+        if with_best:
+            bm = self.best_metric
+            return sep0.join([f"{k:3s}{sep1}{v:.3f}({bm[k]:.3f})" for k, v in
+                           self.calculate(local=local).items()])
+        else:
+            return sep0.join([f"{k:3s}{sep1}{v:.3f}" for k, v in
                            self.calculate(local=local).items()])
 
     def __str__(self):

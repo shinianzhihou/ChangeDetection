@@ -205,7 +205,7 @@ class SiameseUnetDiff(nn.Module):
         return x11d
 
 
-def siamese_unet_diff():
+def siamese_unet_diff(**kwargs):
     net = SiameseUnetDiff(name='siamese_unet_diff')
     return net
 

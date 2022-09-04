@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 
 from build import *
-from utils import Metric, ModelEma
+from utils import Metric, ModelEma, itp_bil
 
 
 def run(args):
@@ -34,15 +34,15 @@ def run(args):
         f'cuda:{max(rank,0)}' if torch.cuda.is_available() else 'cpu')
 
     # model
-    model = build_model(choice='cdp_UnetPlusPlus', encoder_name="timm-efficientnet-b2",
-                        encoder_weights="noisy-student",
-                        decoder_attention_type=decoder_attention_type,
-                        in_channels=3,
-                        classes=2,
-                        siam_encoder=True,
-                        fusion_form='concat',)
+    # model = build_model(choice='cdp_UnetPlusPlus', encoder_name="timm-efficientnet-b2",
+    #                     encoder_weights="noisy-student",
+    #                     decoder_attention_type=decoder_attention_type,
+    #                     in_channels=3,
+    #                     classes=2,
+    #                     siam_encoder=True,
+    #                     fusion_form='concat',)
+    model = build_model(choice='snunet')
     model = model.to(device)
-
 
     # TODO(shinian) load checkpoint
     if ema:
@@ -71,14 +71,14 @@ def run(args):
 
     # dataloader
     train_set = build_dataset(choice='CommonDataset',
-                              metafile="train.txt",
-                              data_root="data/cd/stb/",
+                              metafile="/Users/shinian/proj/data/stb/train.debug.txt",
+                              data_root="/Users/shinian/proj/data/stb/",
                               pipeline=train_pipeline,
                               )
 
     val_set = build_dataset(choice='CommonDataset',
-                            metafile="val.txt",
-                            data_root="data/cd/stb/",
+                            metafile="/Users/shinian/proj/data/stb/val.debug.txt",
+                            data_root="/Users/shinian/proj/data/stb/",
                             pipeline=val_pipeline,)
 
     train_sampler = DistributedSampler(train_set) if rank > -1 else None
@@ -140,13 +140,20 @@ def run(args):
 
             optimizer.zero_grad()
             pred = model(img1, img2)
-            loss = criterion(pred, label)
+            if isinstance(pred, (list, tuple)) and not isinstance(pred[0], (list, tuple)):
+                import pdb;pdb.set_trace()
+                loss_cd = [criterion(pre, itp_bil(
+                    pre, label.shape[-2:])) for pre in pred]
+                loss = sum(loss_cd)/len(loss_cd)
+                output = pred[0].argmax(dim=1)
+            else:
+                loss = criterion(pred, label)
+                output = pred.argmax(dim=1)
             loss.backward()
             optimizer.step()
             if ema:
                 model_ema.update(model)
 
-            output = pred.argmax(dim=1)
             metric_train(output, label)
 
             # FIXME(shinian) gather output/loss/metric on different ranks in DDP
@@ -169,7 +176,7 @@ def run(args):
                 model, val_loader, criterion, metric_val, device)
             pstr = f"[V] e:{epoch+1:2d}/{epochs:2d} | b:{len(val_loader):3d}/{len(val_loader)} | " + \
                 f"lr: {lr_scheduler.get_last_lr()[0]:.3e} | " + \
-                f"{metric_val.print(local)} | " + \
+                f"{metric_val.print(local,with_best=True)} | " + \
                 f"loss:{loss.item():.3e}"
             logger.info(pstr)
             save_dict['state_dict'] = (model.module if hasattr(
@@ -182,7 +189,7 @@ def run(args):
                     model_ema.module, val_loader, criterion, metric_val_ema, device)
                 pstr = f"[A] e:{epoch+1:2d}/{epochs:2d} | b:{len(val_loader):3d}/{len(val_loader)} | " + \
                     f"lr: {lr_scheduler.get_last_lr()[0]:.3e} | " + \
-                    f"{metric_val_ema.print(local)} | " + \
+                    f"{metric_val_ema.print(local,with_best=True)} | " + \
                     f"loss:{loss.item():.3e}"
                 logger.info(pstr)
                 save_dict['state_dict_ema'] = (model_ema.module if hasattr(
@@ -191,7 +198,7 @@ def run(args):
 
             save_name += ".pth"
             save_path = os.path.join(work_dir, save_name)
-            if metric_val.best_metric['f1'] >= f1_thr or metric_val_ema.best_metric['f1'] >= f1_thr:
+            if metric_val.f1(False) >= f1_thr or metric_val_ema.f1(False) >= f1_thr:
                 torch.save(save_dict, save_path)
 
         # after training

@@ -696,7 +696,7 @@ class ChangeFormerV6(nn.Module):
         return cp
 
 
-def changeformer():
+def changeformer(**kwargs):
     net = ChangeFormerV6(name='changeformer')
     return net
 

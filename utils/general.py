@@ -1,6 +1,10 @@
 from collections import defaultdict
+from functools import partial
+
 
 import torch
+
+itp_bil = partial(torch.nn.functional.interpolate, mode='bilinear')
 
 def merge_kwargs_into_cfg(cfg,kwargs):
     ret = defaultdict()
