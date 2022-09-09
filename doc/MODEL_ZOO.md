@@ -1,26 +1,13 @@
 
-
-
-
-## WHU-CD
-
-> 括号内部的表示官方给出的分数
-
-| Models          | Precision | Recall | F1   | Kappa | IoU  | Parameters (M) | FLOPs (G) |
-| --------------- | --------- | ------ | ---- | ----- | ---- | -------------- | --------- |
-| SiameseUnetConc |           |        |      |       |      | 1.841          | 5.406     |
-| SiameseUnetDiff |           |        |      |       |      |                |           |
-|                 |           |        |      |       |      |                |           |
-
-
-
 ## LEVIR-CD
 
-> 括号内部的表示官方给出的分数
+> 括号内部的表示官方给出的分数，若有错误，欢迎 PR和 Issue .
 
-| Models          | Precision | Recall | F1   | Kappa | IoU  | Parameters (M) | FLOPs (G) |
-| --------------- | --------- | ------ | ---- | ----- | ---- | -------------- | --------- |
-| SiameseUnetConc |           |        |      |       |      |                |           |
-| SiameseUnetDiff |           |        |      |       |      |                |           |
-|                 |           |        |      |       |      |                |           |
+|     Models      | Precision | Recall | F1   | Kappa | IoU  | Parameters (M) | FLOPs (G) |
+| :-------------: | :--------: | :------: | :------: | :------: | :------: | :------: | :------: |
+| SiameseUnetConc | \ | \ | \ | \ | \ | 1.546 | 5.331 |
+| SiameseUnetDiff | \ | \ | \ | \ | \ | 1.350 | 4.727 |
+|     SNUNet      | 0.860 | 0.825 | 0.842 | 0.835 | 0.727 | 12.035 | 54.833 |
+|       BIT       | 0.913 | 0.857 | 0.894 | 0.889 | 0.808 | 3.037 | 8.752 |
+| ChangeFormer | 0.890 | 0.838 | 0.863 | 0.857 | 0.759 | 41.027 | 202.788 |
 

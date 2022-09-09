@@ -693,7 +693,7 @@ class ChangeFormerV6(nn.Module):
         # save_to_mat(x1, x2, fx1, fx2, cp, "ChangeFormerV4")
 
         # exit()
-        return cp
+        return cp[::-1]
 
 
 def changeformer(**kwargs):

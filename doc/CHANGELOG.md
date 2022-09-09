@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2022.09.09
+
+- 更新了SNUNet、BiT和ChangeFormer的复现结果。
+
 ## 2022.09.04
 
 - 支持多输出的训练，修复指标重置 best_metric 的bug
