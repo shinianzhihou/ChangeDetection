@@ -1,6 +1,6 @@
-## update 220518
+## update 230109
 
-- Coming soon!  A Divided Spatial and Temporal Context Network for Remote Sensing Change Detection.  ([config](#)/[log](#))
+- A Divided Spatial and Temporal Context Network for Remote Sensing Change Detection.  ([config](./configs/cd_vit/cd_vit_v2_r18_256x256_80k_building.py))
 
 
 ## update 220401
